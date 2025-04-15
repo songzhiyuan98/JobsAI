@@ -17,6 +17,7 @@ import JobManagerPage from "./pages/JobManagerPage";
 import JobSubmitterPage from "./pages/JobSubmitterPage";
 import AnalysisStartPage from "./pages/AnalysisStartPage";
 import AnalysisResultPage from "./pages/AnalysisResultPage";
+import "./styles/print.css";
 
 function App() {
   const dispatch = useDispatch();
@@ -53,7 +54,7 @@ function App() {
         <Navbar />
         <Routes>
           {/* 公开路由 */}
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
 

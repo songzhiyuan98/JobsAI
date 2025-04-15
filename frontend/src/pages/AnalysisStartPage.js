@@ -20,8 +20,10 @@ import {
   FiMessageSquare,
   FiAlertTriangle,
   FiUpload,
+  FiPlus,
 } from "react-icons/fi";
 import ResumePreview from "../components/ResumePreview";
+import JobConfirmation from "../components/JobConfirmation";
 
 const AnalysisStartPage = () => {
   const navigate = useNavigate();
@@ -52,49 +54,91 @@ const AnalysisStartPage = () => {
   const [showResumePreview, setShowResumePreview] = useState(false);
   const [previewResumeId, setPreviewResumeId] = useState(null);
 
+  // 编辑模式状态
+  const [editMode, setEditMode] = useState({
+    basicInfo: false,
+    techStack: false,
+    requirements: false,
+    qualifications: false,
+  });
+
+  // 新添加的技术栈
+  const [newTech, setNewTech] = useState("");
+
   // 获取用户保存的职位列表和简历
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/login");
-          return;
+    // 检查 URL 参数中是否包含预选的职位
+    const queryParams = new URLSearchParams(window.location.search);
+    const preselectedJobId = queryParams.get("jobId");
+    const preselectedJobTitle = queryParams.get("jobTitle");
+
+    if (preselectedJobId) {
+      // 如果 URL 中有预选职位，直接设置为已选职位
+      setSelectedJobId(preselectedJobId);
+
+      // 获取职位详细信息
+      const fetchJobDetails = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const response = await axios.get(`/api/jobs/${preselectedJobId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (response.data.success) {
+            setSelectedJob(response.data.data);
+            // 直接跳到下一步选择简历
+            setStep(2);
+          }
+        } catch (err) {
+          console.error("获取职位详情失败:", err);
+          // 如果获取失败但有职位标题，创建一个临时职位对象
+          if (preselectedJobTitle) {
+            setSelectedJob({
+              _id: preselectedJobId,
+              title: decodeURIComponent(preselectedJobTitle),
+            });
+            setStep(2);
+          }
         }
+      };
 
-        // 获取用户保存的职位
-        const jobsResponse = await axios.get("/api/jobs/user", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+      fetchJobDetails();
+    }
 
-        setJobs(jobsResponse.data.data || []);
+    fetchResumes();
+  }, []);
 
-        // 获取用户的简历
-        const resumesResponse = await axios.get("/api/resumes", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const resumesList = resumesResponse.data.data || [];
-        setResumes(resumesList);
-
-        // 默认选择激活的简历
-        const activeResume = resumesList.find((resume) => resume.isActive);
-        if (activeResume) {
-          setSelectedResumeId(activeResume._id);
-          setSelectedResume(activeResume);
-        }
-
-        setLoading(false);
-      } catch (err) {
-        console.error("获取数据失败:", err);
-        setError("无法加载数据，请重试");
-        setLoading(false);
+  const fetchResumes = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
       }
-    };
 
-    fetchData();
-  }, [navigate]);
+      // 获取用户的简历
+      const resumesResponse = await axios.get("/api/resumes", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const resumesList = resumesResponse.data.data || [];
+      setResumes(resumesList);
+
+      // 默认选择激活的简历
+      const activeResume = resumesList.find((resume) => resume.isActive);
+      if (activeResume) {
+        setSelectedResumeId(activeResume._id);
+        setSelectedResume(activeResume);
+      }
+
+      setLoading(false);
+    } catch (err) {
+      console.error("获取数据失败:", err);
+      setError("无法加载数据，请重试");
+      setLoading(false);
+    }
+  };
 
   // 从JobSubmit复制的模拟分析进度功能
   const simulateAnalysisProgress = () => {
@@ -148,32 +192,6 @@ const AnalysisStartPage = () => {
     } catch (err) {
       setError("解析职位失败：" + (err.response?.data?.message || err.message));
       setIsParsingJob(false);
-    }
-  };
-
-  // 修复confirmParsedJob函数 - 使用正确的响应字段名
-  const confirmParsedJob = async () => {
-    try {
-      setLoadingAction(true);
-      const token = localStorage.getItem("token");
-
-      const response = await axios.post("/api/jobs", parsedJob, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.data.success) {
-        // 使用data字段而不是job字段，与后端API匹配
-        setSelectedJobId(response.data.data._id);
-        setSelectedJob(response.data.data);
-        setJobVerificationStep(false);
-        setStep(2); // 进入选择简历步骤
-      } else {
-        setError(response.data.message || "保存职位失败，请重试");
-      }
-    } catch (err) {
-      setError("保存职位失败：" + (err.response?.data?.message || err.message));
-    } finally {
-      setLoadingAction(false);
     }
   };
 
@@ -267,6 +285,13 @@ const AnalysisStartPage = () => {
     localStorage.setItem("returnToInterview", "true");
     localStorage.setItem("selectedJobId", selectedJobId);
     navigate("/resume/upload");
+  };
+
+  // 取消职位确认
+  const handleCancelJob = () => {
+    setJobVerificationStep(false);
+    setJobInput("");
+    setParsedJob(null);
   };
 
   if (loading) {
@@ -480,179 +505,19 @@ const AnalysisStartPage = () => {
         </div>
       )}
 
-      {/* JD解析确认 */}
+      {/* JD解析确认 - 预览模式 */}
       {step === 1 && jobVerificationStep && parsedJob && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-          <div className="mb-6">
-            <h2 className="text-xl font-medium mb-4 text-gray-900 dark:text-white text-left">
-              确认职位信息
-            </h2>
-
-            <div className="space-y-6">
-              <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30">
-                <div className="flex items-start">
-                  <FiInfo className="text-indigo-600 dark:text-indigo-400 mt-0.5 mr-3 flex-shrink-0" />
-                  <p className="text-sm text-indigo-700 dark:text-indigo-300">
-                    我们已分析您提供的职位描述，并提取了以下信息。请检查并确认，或根据需要进行编辑。
-                  </p>
-                </div>
-              </div>
-
-              {/* 职位标题 */}
-              <div>
-                <label
-                  htmlFor="title"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  职位标题
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  value={parsedJob.title || ""}
-                  onChange={(e) =>
-                    setParsedJob({ ...parsedJob, title: e.target.value })
-                  }
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              {/* 公司名称 */}
-              <div>
-                <label
-                  htmlFor="company"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  公司名称
-                </label>
-                <input
-                  type="text"
-                  id="company"
-                  value={parsedJob.company || ""}
-                  onChange={(e) =>
-                    setParsedJob({ ...parsedJob, company: e.target.value })
-                  }
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              {/* 技术栈 */}
-              {parsedJob.tech_stack && parsedJob.tech_stack.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    技术栈
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {parsedJob.tech_stack.map((tech, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-sm flex items-center"
-                      >
-                        {tech}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updatedTechStack = [...parsedJob.tech_stack];
-                            updatedTechStack.splice(index, 1);
-                            setParsedJob({
-                              ...parsedJob,
-                              tech_stack: updatedTechStack,
-                            });
-                          }}
-                          className="ml-1.5 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
-                        >
-                          <FiX size={14} />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 职位要求 */}
-              {parsedJob.requirements && parsedJob.requirements.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    职位要求
-                  </label>
-                  <div className="space-y-2">
-                    {parsedJob.requirements.map((req, index) => (
-                      <div key={index} className="flex items-start">
-                        <textarea
-                          value={req}
-                          onChange={(e) => {
-                            const updatedRequirements = [
-                              ...parsedJob.requirements,
-                            ];
-                            updatedRequirements[index] = e.target.value;
-                            setParsedJob({
-                              ...parsedJob,
-                              requirements: updatedRequirements,
-                            });
-                          }}
-                          className="flex-grow p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updatedRequirements = [
-                              ...parsedJob.requirements,
-                            ];
-                            updatedRequirements.splice(index, 1);
-                            setParsedJob({
-                              ...parsedJob,
-                              requirements: updatedRequirements,
-                            });
-                          }}
-                          className="ml-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <FiX size={18} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 原始JD */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  原始职位描述
-                </label>
-                <div className="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 max-h-60 overflow-y-auto whitespace-pre-wrap">
-                  {parsedJob.description || jobInput}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-between mt-6">
-            <button
-              onClick={() => setJobVerificationStep(false)}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center"
-            >
-              <FiArrowLeft className="mr-2" /> 返回
-            </button>
-
-            <button
-              onClick={confirmParsedJob}
-              disabled={loadingAction}
-              className={`px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center ${
-                loadingAction ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
-              {loadingAction ? (
-                <>
-                  <FiLoader className="animate-spin mr-2" /> 处理中
-                </>
-              ) : (
-                <>
-                  确认并继续 <FiArrowRight className="ml-2" />
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+        <JobConfirmation
+          parsedJob={parsedJob}
+          setParsedJob={setParsedJob}
+          onSuccess={(savedJob) => {
+            setSelectedJobId(savedJob._id);
+            setSelectedJob(savedJob);
+            setJobVerificationStep(false);
+            setStep(2); // 进入选择简历步骤
+          }}
+          onCancel={handleCancelJob}
+        />
       )}
 
       {/* 第二步：选择简历 */}
@@ -690,7 +555,7 @@ const AnalysisStartPage = () => {
                         </div>
                         <div className="ml-3 flex-1">
                           <h3 className="font-medium text-gray-900 dark:text-white">
-                            {resume.basicInfo?.fullName || "未命名简历"}
+                            {resume.name || "未命名简历"}
                           </h3>
                           <div className="flex flex-wrap gap-2 mt-2">
                             {resume.basicInfo?.title && (
@@ -818,7 +683,11 @@ const AnalysisStartPage = () => {
                       </h5>
                       <ul className="list-disc pl-5 text-sm text-gray-700 dark:text-gray-300 space-y-1">
                         {selectedJob.requirements.map((req, idx) => (
-                          <li key={idx}>{req}</li>
+                          <li key={idx}>
+                            {typeof req === "string"
+                              ? req
+                              : JSON.stringify(req)}
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -831,7 +700,11 @@ const AnalysisStartPage = () => {
                       </h5>
                       <ul className="list-disc pl-5 text-sm text-gray-700 dark:text-gray-300 space-y-1">
                         {selectedJob.responsibilities.map((resp, idx) => (
-                          <li key={idx}>{resp}</li>
+                          <li key={idx}>
+                            {typeof resp === "string"
+                              ? resp
+                              : JSON.stringify(resp)}
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -848,7 +721,9 @@ const AnalysisStartPage = () => {
                             key={idx}
                             className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-800 dark:text-gray-300"
                           >
-                            {skill}
+                            {typeof skill === "string"
+                              ? skill
+                              : JSON.stringify(skill)}
                           </span>
                         ))}
                       </div>
@@ -862,7 +737,11 @@ const AnalysisStartPage = () => {
                       </h5>
                       <ul className="list-disc pl-5 text-sm text-gray-700 dark:text-gray-300 space-y-1">
                         {selectedJob.benefits.map((benefit, idx) => (
-                          <li key={idx}>{benefit}</li>
+                          <li key={idx}>
+                            {typeof benefit === "string"
+                              ? benefit
+                              : JSON.stringify(benefit)}
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -981,7 +860,9 @@ const AnalysisStartPage = () => {
                               key={idx}
                               className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-800 dark:text-gray-300"
                             >
-                              {skill}
+                              {typeof skill === "string"
+                                ? skill
+                                : JSON.stringify(skill)}
                             </span>
                           ))}
                         </div>

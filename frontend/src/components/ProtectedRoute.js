@@ -16,7 +16,7 @@ const ProtectedRoute = ({ children }) => {
 
   if (!isAuthenticated) {
     // 重定向到登录页面，并保存原始目标路径
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   // 给受保护路由内容添加顶部间距

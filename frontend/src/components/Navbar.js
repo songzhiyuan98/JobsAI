@@ -39,7 +39,7 @@ const Navbar = () => {
     // 更新Redux状态
     dispatch(logout());
     // 导航到登录页
-    navigate("/login");
+    navigate("/");
   };
 
   return (
@@ -126,7 +126,7 @@ const Navbar = () => {
             ) : (
               <div className="flex items-center space-x-4">
                 <Link
-                  to="/login"
+                  to="/"
                   className="text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium"
                 >
                   登录

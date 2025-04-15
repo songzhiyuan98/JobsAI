@@ -1,4 +1,5 @@
 const OpenAI = require("openai");
+const Analysis = require("../models/analysis");
 
 // 创建OpenAI客户端实例
 const openai = new OpenAI({
@@ -15,148 +16,173 @@ const analyzeResumeMatch = async (job, resume) => {
     const resumeStr = JSON.stringify(resume, null, 2);
 
     // 构建系统提示词
-    const systemPrompt = `你是一位经验丰富的HR分析专家，需要分析候选人简历与职位JD的匹配程度。请提供专业、详细的分析报告。
+    const systemPrompt = `你是一位专业的职业顾问、技术面试官和招聘专家。
+请分析候选人的简历与职位描述的匹配情况，并返回结构化的JSON分析(请使用中文回答)，包含4个关键维度：
 
-输入信息:
-【职位信息】
+1. ATS系统分析
+2. 与其他候选人的排名比较
+3. 招聘人员(HR)印象和面试决策
+4. 技术面试官洞见
+
+--- 职位描述 ---
 ${jobStr}
 
-【候选人简历】
+--- 简历内容 ---
 ${resumeStr}
 
-请提供以下分析内容:
-1. 匹配度评分(0-100分)：给出一个总体匹配分数，并解释评分依据
-2. JD关键需求解读：列出3-5个职位最关键的要求和技能
-3. 简历优势分析：列出候选人简历中与职位匹配的3-5个优势
-4. 简历不足分析：指出简历中的3-5个不足或与JD不匹配的地方
-5. 面试可能性预测：预测HR邀请面试的概率(低/中/高)，并给出理由
-6. 可能的面试问题：列出5-8个面试官可能会问的问题
-7. 简历优化建议：提供3-5条具体建议，帮助候选人提高与该职位的匹配度
+请严格按照以下JSON格式返回分析结果：
 
-分析应当客观、专业，避免过度乐观或悲观的断言。请确保分析条理清晰，每个部分有明确的标题和分点说明。`;
+{
+  "ats_analysis": {
+    "match_score_percent": 整数,
+    "missing_keywords": ["关键词1", "关键词2"],
+    "format_check": {
+      "bullets": 布尔值,
+      "section_headers": 布尔值,
+      "fonts_consistent": 布尔值,
+      "verb_driven": 布尔值,
+      "tech_result_impact": 布尔值
+    },
+    "ats_pass_probability": 小数,
+    "improvement_suggestions": ["建议1", "建议2"],
+    "keywords_hit": ["关键词1", "关键词2"],
+    "keywords_missing": ["关键词1", "关键词2"]
+  },
+  "ranking_analysis": {
+    "predicted_rank_percentile": 整数,
+    "estimated_total_applicants": 整数,
+    "top_5_diff": [
+      {
+        "category": "类别名称",
+        "yours": "你的情况",
+        "top_candidates": "顶尖候选人情况"
+      }
+    ],
+    "rank_boost_suggestions": ["建议1", "建议2"]
+  },
+  "hr_analysis": {
+    "initial_impression": "第一印象描述",
+    "recommend_interview": 布尔值,
+    "why_or_why_not": "推荐或不推荐的原因",
+    "expression_issues": [
+      {
+        "original": "原始表述",
+        "problem": "问题描述",
+        "suggested": "建议表述"
+      }
+    ],
+    "market_reminder": "市场趋势提醒"
+  },
+  "technical_analysis": {
+    "trust_level": "low|medium|high",
+    "red_flags": ["警示点1", "警示点2"],
+    "expected_tech_questions": [
+      {
+        "project": "项目名称",
+        "questions": ["问题1", "问题2"]
+      }
+    ],
+    "technical_improvement": ["建议1", "建议2"],
+    "project_deployment_verified": 布尔值,
+    "data_complexity": "简单|中等|复杂"
+  },
+  "matchScore": 整数,
+  "matchProbability": "低|中|高"
+}
+
+确保生成有效的JSON，不要有多余的反引号或注释。所有字段都必须有值。`;
 
     // 调用OpenAI API
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [{ role: "system", content: systemPrompt }],
       temperature: 0.7,
-      max_tokens: 3000,
+      max_tokens: 3500,
+      response_format: { type: "json_object" }, // 指定返回JSON格式
     });
 
-    const analysisResult = response.choices[0].message.content;
-
-    // 尝试提取结构化数据
-    const structuredData = extractStructuredData(analysisResult);
-
-    return {
-      rawAnalysis: analysisResult,
-      structured: structuredData,
-    };
+    // 解析JSON响应
+    let result;
+    try {
+      result = JSON.parse(response.choices[0].message.content);
+      return {
+        rawAnalysis: response.choices[0].message.content,
+        structured: {
+          matchScore:
+            result.matchScore || result.ats_analysis?.match_score_percent || 0,
+          matchProbability: result.matchProbability || "中",
+          keyRequirements:
+            result.keyRequirements || result.ats_analysis?.keywords_hit || [],
+          strengths:
+            result.strengths ||
+            result.ranking_analysis?.rank_boost_suggestions ||
+            [],
+          weaknesses:
+            result.weaknesses || result.ats_analysis?.missing_keywords || [],
+          possibleQuestions:
+            result.possibleQuestions ||
+            result.technical_analysis?.expected_tech_questions?.flatMap(
+              (q) => q.questions
+            ) ||
+            [],
+          improvementSuggestions:
+            result.improvementSuggestions ||
+            result.ats_analysis?.improvement_suggestions ||
+            [],
+          // 新增详细结构
+          ats_analysis: result.ats_analysis || {},
+          ranking_analysis: result.ranking_analysis || {},
+          hr_analysis: result.hr_analysis || {},
+          technical_analysis: result.technical_analysis || {},
+        },
+      };
+    } catch (e) {
+      console.error("JSON解析失败:", e);
+      // 如果JSON解析失败，返回原始响应作为rawAnalysis
+      return {
+        rawAnalysis: response.choices[0].message.content,
+        structured: {
+          matchScore: 0,
+          matchProbability: "未知",
+          keyRequirements: [],
+          strengths: [],
+          weaknesses: [],
+          possibleQuestions: [],
+          improvementSuggestions: [],
+          // 新增空结构
+          ats_analysis: {},
+          ranking_analysis: {},
+          hr_analysis: {},
+          technical_analysis: {},
+        },
+      };
+    }
   } catch (error) {
     console.error("简历分析失败:", error);
     throw new Error("简历分析服务出现错误，请稍后再试");
   }
 };
 
-/**
- * 从分析文本中提取结构化数据
- */
-const extractStructuredData = (text) => {
-  // 初始化结构化数据对象
-  const data = {
-    matchScore: 0,
-    matchProbability: "未知",
-    keyRequirements: [],
-    strengths: [],
-    weaknesses: [],
-    possibleQuestions: [],
-    improvementSuggestions: [],
-  };
-
+// 获取简历分析
+const getAnalysisById = async (analysisId) => {
   try {
-    // 提取匹配度评分
-    const scoreMatch = text.match(/匹配度评分.*?(\d+)/i);
-    if (scoreMatch && scoreMatch[1]) {
-      data.matchScore = parseInt(scoreMatch[1], 10);
-    }
+    // 使用正确的字段名称进行填充
+    const analysis = await Analysis.findById(analysisId)
+      .populate("userId", "name email") // 填充用户信息
+      .populate("resumeId", "title content") // 填充简历信息
+      .populate("jobId", "title company description"); // 填充职位信息
 
-    // 提取面试可能性
-    if (
-      text.includes("高") &&
-      (text.includes("面试可能性") || text.includes("邀请面试的概率"))
-    ) {
-      data.matchProbability = "高";
-    } else if (
-      text.includes("中") &&
-      (text.includes("面试可能性") || text.includes("邀请面试的概率"))
-    ) {
-      data.matchProbability = "中";
-    } else if (
-      text.includes("低") &&
-      (text.includes("面试可能性") || text.includes("邀请面试的概率"))
-    ) {
-      data.matchProbability = "低";
+    if (!analysis) {
+      throw new Error("分析结果不存在");
     }
-
-    // 提取关键需求
-    const requirementsSection = text.match(
-      /JD关键需求解读[：:]([\s\S]*?)(?=简历优势|$)/i
-    );
-    if (requirementsSection && requirementsSection[1]) {
-      data.keyRequirements = extractListItems(requirementsSection[1]);
-    }
-
-    // 提取优势
-    const strengthsSection = text.match(
-      /简历优势[：:]([\s\S]*?)(?=简历不足|$)/i
-    );
-    if (strengthsSection && strengthsSection[1]) {
-      data.strengths = extractListItems(strengthsSection[1]);
-    }
-
-    // 提取不足
-    const weaknessesSection = text.match(
-      /简历不足[：:]([\s\S]*?)(?=面试可能性|$)/i
-    );
-    if (weaknessesSection && weaknessesSection[1]) {
-      data.weaknesses = extractListItems(weaknessesSection[1]);
-    }
-
-    // 提取可能的面试问题
-    const questionsSection = text.match(
-      /面试问题[：:]([\s\S]*?)(?=简历优化|$)/i
-    );
-    if (questionsSection && questionsSection[1]) {
-      data.possibleQuestions = extractListItems(questionsSection[1]);
-    }
-
-    // 提取改进建议
-    const suggestionsSection = text.match(/简历优化建议[：:]([\s\S]*?)$/i);
-    if (suggestionsSection && suggestionsSection[1]) {
-      data.improvementSuggestions = extractListItems(suggestionsSection[1]);
-    }
+    return analysis;
   } catch (error) {
-    console.error("结构化数据提取失败:", error);
+    console.error("获取分析结果失败:", error);
+    throw error;
   }
-
-  return data;
-};
-
-/**
- * 从文本中提取列表项
- */
-const extractListItems = (text) => {
-  // 匹配数字或点开头的列表项
-  const itemMatches = text.match(/(?:\d+\.|\d+\)|\-|\•|\*)\s*([^\n]+)/g);
-  if (itemMatches) {
-    // 移除列表标记，只保留内容
-    return itemMatches
-      .map((item) => item.replace(/^\s*(?:\d+\.|\d+\)|\-|\•|\*)\s*/, "").trim())
-      .filter(Boolean);
-  }
-  return [];
 };
 
 module.exports = {
   analyzeResumeMatch,
+  getAnalysisById,
 };

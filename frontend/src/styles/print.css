@@ -1,0 +1,89 @@
+/* 打印样式 */
+@media print {
+  @page {
+    size: auto;
+    margin: 10mm; /* 减小页面边距 */
+  }
+  
+  body {
+    font-family: 'Arial', sans-serif;
+    color: #000;
+    background: #fff;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+  
+  /* 隐藏不需要打印的元素 */
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  /* 确保内容适合页面宽度 */
+  .container, 
+  .max-w-3xl,
+  .max-w-4xl,
+  .max-w-5xl,
+  .bg-white,
+  .dark\:bg-gray-800 {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  
+  /* 调整内容区域宽度 */
+  #report-container {
+    width: 100% !important;
+    padding: 5mm !important;
+    margin: 0 !important;
+  }
+  
+  /* 让每个部分宽度占满 */
+  .mb-8, .mb-6, .mb-4 {
+    width: 100% !important;
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* 更紧凑的行间距 */
+  p, li {
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+    page-break-inside: avoid;
+  }
+  
+  /* 优化标题样式 */
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* 调整图标大小 */
+  svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+  
+  /* 减少空白区域 */
+  .space-y-4 > * + * {
+    margin-top: 0.5rem !important;
+  }
+  
+  /* 确保背景色在打印时可见 */
+  .bg-green-100, .bg-amber-100, .bg-red-100, .bg-blue-100 {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-color: #f3f4f6 !important; /* 统一使用浅灰色背景 */
+  }
+  
+  /* 确保边框在打印时可见 */
+  .border, .border-l-2, .border-t, .border-b {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    border-color: #d1d5db !important; /* 统一使用中灰色边框 */
+  }
+} 

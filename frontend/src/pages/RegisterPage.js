@@ -85,7 +85,7 @@ const RegisterPage = () => {
         <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
           或{" "}
           <Link
-            to="/login"
+            to="/"
             className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500"
           >
             登录已有账号

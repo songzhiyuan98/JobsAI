@@ -31,19 +31,11 @@ const parseJobText = async (req, res) => {
 // 保存用户JD
 const saveUserJob = async (req, res) => {
   try {
-    const {
-      title,
-      company,
-      location,
-      description,
-      requirements,
-      preferred_qualifications,
-      tech_stack,
-      original_text,
-      source_url,
-    } = req.body;
+    // 获取所有提交的字段
+    const jobData = req.body;
+    console.log("接收到的职位数据:", jobData);
 
-    if (!title || !company) {
+    if (!jobData.title || !jobData.company) {
       return res.status(400).json({
         success: false,
         message: "职位名称和公司名称为必填项",
@@ -53,12 +45,15 @@ const saveUserJob = async (req, res) => {
     // 检查是否已存在相同职位
     const existingJob = await UserJob.findOne({
       user: req.user.id,
-      title: title,
-      company: company,
+      title: jobData.title,
+      company: jobData.company,
     });
 
-    // 如果已存在相同职位，直接返回该职位
-    if (existingJob) {
+    // 如果已存在相同职位且不是当前编辑的职位，返回提示
+    if (
+      existingJob &&
+      (!req.params.id || existingJob._id.toString() !== req.params.id)
+    ) {
       return res.status(200).json({
         success: true,
         data: existingJob,
@@ -68,20 +63,17 @@ const saveUserJob = async (req, res) => {
 
     // 如果提供了ID，则更新现有记录
     if (req.params.id) {
+      // 从请求体中删除 _id 和 user 字段
+      const { _id, user, ...updateData } = jobData;
+
+      // 确保isVerified字段为true
+      updateData.isVerified = true;
+
+      console.log("更新数据:", updateData);
+
       const updatedJob = await UserJob.findOneAndUpdate(
         { _id: req.params.id, user: req.user.id },
-        {
-          title,
-          company,
-          location,
-          description,
-          requirements,
-          preferred_qualifications,
-          tech_stack,
-          original_text,
-          source_url,
-          isVerified: true,
-        },
+        updateData,
         { new: true }
       );
 
@@ -98,17 +90,10 @@ const saveUserJob = async (req, res) => {
       });
     }
 
+    // 创建新职位
     const newJob = new UserJob({
+      ...jobData,
       user: req.user.id,
-      title,
-      company,
-      location,
-      description,
-      requirements,
-      preferred_qualifications,
-      tech_stack,
-      original_text,
-      source_url,
       isVerified: true, // 用户确认后的JD默认已验证
     });
 
@@ -119,10 +104,10 @@ const saveUserJob = async (req, res) => {
       data: newJob,
     });
   } catch (error) {
-    console.error("保存职位描述失败:", error);
+    console.error("保存职位失败:", error);
     return res.status(500).json({
       success: false,
-      message: "服务器错误，保存职位描述失败",
+      message: "服务器错误，无法保存职位",
     });
   }
 };

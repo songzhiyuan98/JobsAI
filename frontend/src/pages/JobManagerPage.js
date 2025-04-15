@@ -16,7 +16,13 @@ import {
   FiDollarSign,
   FiCalendar,
   FiArrowLeft,
+  FiInfo,
+  FiTrash2,
+  FiBookmark,
+  FiCheckCircle,
 } from "react-icons/fi";
+import JobConfirmation from "../components/JobConfirmation";
+import AnalysisReportsList from "../components/AnalysisReportsList";
 
 const JobManagerPage = () => {
   const navigate = useNavigate();
@@ -25,7 +31,9 @@ const JobManagerPage = () => {
   const [error, setError] = useState(null);
   const [expandedJobId, setExpandedJobId] = useState(null);
   const [editingJob, setEditingJob] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [viewingReportsJobId, setViewingReportsJobId] = useState(null);
+  const [viewingReportsJobTitle, setViewingReportsJobTitle] = useState("");
 
   // 状态选项
   const statusOptions = [
@@ -83,41 +91,16 @@ const JobManagerPage = () => {
     setExpandedJobId(expandedJobId === jobId ? null : jobId);
   };
 
-  // 开始编辑职位
+  // 开始编辑职位 - 使用JobConfirmation
   const startEditJob = (job) => {
     setEditingJob({ ...job });
+    setShowConfirmation(true);
   };
 
   // 取消编辑
   const cancelEdit = () => {
     setEditingJob(null);
-  };
-
-  // 处理编辑表单字段变更
-  const handleFieldChange = (field, value) => {
-    setEditingJob({ ...editingJob, [field]: value });
-  };
-
-  // 处理数组类型字段变更（如requirements, tech_stack等）
-  const handleArrayFieldChange = (field, index, value) => {
-    const newArray = [...editingJob[field]];
-
-    if (value === "") {
-      // 删除项目
-      newArray.splice(index, 1);
-    } else {
-      // 更新项目
-      newArray[index] = value;
-    }
-
-    setEditingJob({ ...editingJob, [field]: newArray });
-  };
-
-  // 添加新项到数组字段
-  const addArrayItem = (field, value = "") => {
-    if (!value.trim()) return;
-    const newArray = [...(editingJob[field] || []), value.trim()];
-    setEditingJob({ ...editingJob, [field]: newArray });
+    setShowConfirmation(false);
   };
 
   // 更新职位状态
@@ -142,37 +125,10 @@ const JobManagerPage = () => {
     }
   };
 
-  // 保存编辑的职位
-  const saveEditedJob = async () => {
-    if (!editingJob) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.put(
-        `/api/jobs/${editingJob._id}`,
-        editingJob,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.data.success) {
-        setJobs(
-          jobs.map((job) =>
-            job._id === editingJob._id ? response.data.data : job
-          )
-        );
-        setEditingJob(null);
-        setExpandedJobId(editingJob._id);
-      } else {
-        setError(response.data.message || "更新失败，请重试");
-      }
-    } catch (err) {
-      console.error("保存职位失败:", err);
-      setError("保存职位失败，请重试");
-    }
-  };
-
   // 删除职位
   const deleteJob = async (jobId) => {
+    if (!window.confirm("确定要删除这个职位吗？")) return;
+
     try {
       const token = localStorage.getItem("token");
       const response = await axios.delete(`/api/jobs/${jobId}`, {
@@ -181,12 +137,11 @@ const JobManagerPage = () => {
 
       if (response.data.success) {
         setJobs(jobs.filter((job) => job._id !== jobId));
-        setConfirmDelete(null);
       } else {
-        setError(response.data.message || "删除失败，请重试");
+        setError(response.data.message || "删除职位失败");
       }
     } catch (err) {
-      console.error("删除职位失败:", err);
+      console.error("删除职位错误:", err);
       setError("删除职位失败，请重试");
     }
   };
@@ -207,516 +162,243 @@ const JobManagerPage = () => {
     return option ? option.color : "bg-gray-100 text-gray-800";
   };
 
-  return (
-    <div className="w-full px-4 py-8">
-      {/* 内容容器居中但内部文本左对齐 */}
-      <div className="max-w-5xl mx-auto">
-        {/* 返回和页面标题 */}
-        <div className="flex items-center mb-6 text-left">
+  // 添加新函数 - 查看报告
+  const viewJobReports = (job) => {
+    setViewingReportsJobId(job._id);
+    setViewingReportsJobTitle(job.title);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <FiLoader className="w-8 h-8 text-indigo-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (showConfirmation && editingJob) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <div className="mb-6">
           <button
-            onClick={() => navigate("/dashboard")}
-            className="mr-3 p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            onClick={cancelEdit}
+            className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
           >
-            <FiArrowLeft size={20} />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white text-left">
-              职位管理
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1 text-left">
-              管理您收藏的职位信息及申请状态
-            </p>
-          </div>
-          <button
-            onClick={() => navigate("/job-submit")}
-            className="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
-          >
-            <FiPlus className="mr-2" />
-            添加职位
+            <FiArrowLeft className="mr-2" /> 返回职位列表
           </button>
         </div>
 
-        {/* 错误提示 */}
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 p-4 rounded-lg mb-6 flex items-start text-left">
-            <FiAlertCircle className="mr-2 mt-0.5 flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+        <JobConfirmation
+          parsedJob={editingJob}
+          setParsedJob={setEditingJob}
+          onSuccess={(updatedJob) => {
+            // 更新本地数据
+            setJobs(
+              jobs.map((j) => (j._id === updatedJob._id ? updatedJob : j))
+            );
+            setShowConfirmation(false);
+            setEditingJob(null);
+          }}
+          onCancel={cancelEdit}
+        />
+      </div>
+    );
+  }
 
-        {/* 职位列表 */}
-        <div className="space-y-4">
-          {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <FiLoader className="animate-spin text-indigo-600 text-4xl" />
-            </div>
-          ) : jobs.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8">
-              <div className="text-left w-full">
-                <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center rounded-full mb-4">
-                  <FiBriefcase className="text-indigo-500 text-2xl" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  还没有添加职位
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  添加您感兴趣的职位信息，追踪申请进展
-                </p>
-                <button
-                  onClick={() => navigate("/job-submit")}
-                  className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
-                >
-                  <FiPlus className="mr-2" />
-                  添加第一个职位
-                </button>
-              </div>
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          职位管理
+        </h1>
+        <button
+          onClick={() => navigate("/jobs/new")}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center"
+        >
+          <FiPlus className="mr-2" /> 添加职位
+        </button>
+      </div>
+
+      {showConfirmation && editingJob ? (
+        <JobConfirmation
+          parsedJob={editingJob}
+          setParsedJob={setEditingJob}
+          onSuccess={(updatedJob) => {
+            // 更新本地数据
+            setJobs(
+              jobs.map((j) => (j._id === updatedJob._id ? updatedJob : j))
+            );
+            setShowConfirmation(false);
+            setEditingJob(null);
+          }}
+          onCancel={cancelEdit}
+        />
+      ) : (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          {jobs.length === 0 ? (
+            <div className="p-8 text-center">
+              <FiInfo className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                暂无职位
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
+                您还没有添加任何职位，点击下方按钮添加第一个职位。
+              </p>
+              <button
+                onClick={() => navigate("/jobs/new")}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 inline-flex items-center"
+              >
+                <FiPlus className="mr-2" /> 添加职位
+              </button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {jobs.map((job) => (
                 <div
                   key={job._id}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden"
+                  className="hover:bg-gray-50 dark:hover:bg-gray-750"
                 >
-                  {/* 职位信息头部 */}
                   <div
-                    className={`px-5 py-4 cursor-pointer ${
-                      expandedJobId === job._id || editingJob?._id === job._id
-                        ? "border-b border-gray-200 dark:border-gray-700"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      !editingJob || editingJob._id !== job._id
-                        ? toggleJobExpand(job._id)
-                        : null
-                    }
+                    className="px-6 py-4 flex items-center justify-between cursor-pointer"
+                    onClick={() => toggleJobExpand(job._id)}
                   >
-                    <div className="flex items-start justify-between text-left">
-                      <div className="flex-1">
-                        <div className="flex items-start">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mr-2">
-                            {job.title}
-                          </h3>
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusStyle(
-                              job.status
-                            )}`}
-                          >
-                            {statusOptions.find(
-                              (opt) => opt.value === job.status
-                            )?.label || "未知"}
-                          </span>
-                        </div>
-                        <div className="text-gray-700 dark:text-gray-300 text-left mt-1">
-                          {job.company}
-                        </div>
-                        <div className="flex items-center flex-wrap text-sm text-gray-500 dark:text-gray-400 mt-2 gap-3">
-                          {job.location && (
-                            <div className="flex items-center">
-                              <FiMapPin className="mr-1" />
-                              {job.location}
-                            </div>
-                          )}
-                          {job.salary_range && (
-                            <div className="flex items-center">
-                              <FiDollarSign className="mr-1" />
-                              {job.salary_range}
-                            </div>
-                          )}
-                          <div className="flex items-center">
-                            <FiCalendar className="mr-1" />
-                            {formatDate(job.updatedAt)}
-                          </div>
-                        </div>
-
-                        {/* 技术栈标签 */}
-                        {job.tech_stack && job.tech_stack.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 mt-3">
-                            {job.tech_stack.slice(0, 5).map((tech, index) => (
-                              <span
-                                key={index}
-                                className="px-2 py-1 text-xs rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                              >
-                                {tech}
-                              </span>
-                            ))}
-                            {job.tech_stack.length > 5 && (
-                              <span className="px-2 py-1 text-xs rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                                +{job.tech_stack.length - 5}
-                              </span>
-                            )}
-                          </div>
-                        )}
+                    <div className="flex items-center">
+                      <FiBriefcase className="text-indigo-500 dark:text-indigo-400 mr-3 flex-shrink-0" />
+                      <div className="text-left">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                          {job.title}
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {job.company} · {job.location}
+                        </p>
                       </div>
-
-                      <div className="flex items-center">
-                        {expandedJobId === job._id ? (
-                          <FiChevronDown className="text-gray-500 dark:text-gray-400 ml-2 text-xl" />
-                        ) : (
-                          <FiChevronRight className="text-gray-500 dark:text-gray-400 ml-2 text-xl" />
-                        )}
-                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      {job.status === "saved" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateJobStatus(job._id, "interviewed");
+                          }}
+                          className="text-yellow-500 hover:text-yellow-600 p-2"
+                          title="标记为已面试"
+                        >
+                          <FiBookmark size={18} />
+                        </button>
+                      )}
+                      {job.status === "interviewed" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateJobStatus(job._id, "offered");
+                          }}
+                          className="text-green-500 hover:text-green-600 p-2"
+                          title="标记为已录用"
+                        >
+                          <FiCheckCircle size={18} />
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startEditJob(job);
+                        }}
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-2"
+                      >
+                        <FiEdit size={18} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteJob(job._id);
+                        }}
+                        className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-2"
+                      >
+                        <FiTrash2 size={18} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          viewJobReports(job);
+                        }}
+                        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 p-2"
+                      >
+                        <FiExternalLink size={18} />
+                      </button>
+                      {expandedJobId === job._id ? (
+                        <FiChevronDown className="text-gray-400" />
+                      ) : (
+                        <FiChevronRight className="text-gray-400" />
+                      )}
                     </div>
                   </div>
 
-                  {/* 展开的详情区域 */}
                   {expandedJobId === job._id && (
-                    <div className="px-5 py-4">
-                      {editingJob && editingJob._id === job._id ? (
-                        <div className="space-y-4 text-left">
-                          {/* 编辑表单 */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                职位名称
-                              </label>
-                              <input
-                                type="text"
-                                value={editingJob.title || ""}
-                                onChange={(e) =>
-                                  handleFieldChange("title", e.target.value)
-                                }
-                                className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-200"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                公司名称
-                              </label>
-                              <input
-                                type="text"
-                                value={editingJob.company || ""}
-                                onChange={(e) =>
-                                  handleFieldChange("company", e.target.value)
-                                }
-                                className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-200"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                工作地点
-                              </label>
-                              <input
-                                type="text"
-                                value={editingJob.location || ""}
-                                onChange={(e) =>
-                                  handleFieldChange("location", e.target.value)
-                                }
-                                className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-200"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                薪资范围
-                              </label>
-                              <input
-                                type="text"
-                                value={editingJob.salary_range || ""}
-                                onChange={(e) =>
-                                  handleFieldChange(
-                                    "salary_range",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-200"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              职位描述
-                            </label>
-                            <textarea
-                              value={editingJob.description || ""}
-                              onChange={(e) =>
-                                handleFieldChange("description", e.target.value)
-                              }
-                              rows={4}
-                              className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-200"
-                            ></textarea>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              技术栈
-                            </label>
-                            <div className="space-y-2">
-                              {(editingJob.tech_stack || []).map(
-                                (tech, index) => (
-                                  <div
-                                    key={index}
-                                    className="flex items-center space-x-2"
-                                  >
-                                    <input
-                                      type="text"
-                                      className="flex-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-200"
-                                      value={tech}
-                                      onChange={(e) =>
-                                        handleArrayFieldChange(
-                                          "tech_stack",
-                                          index,
-                                          e.target.value
-                                        )
-                                      }
-                                    />
-                                    <button
-                                      onClick={() =>
-                                        handleArrayFieldChange(
-                                          "tech_stack",
-                                          index,
-                                          ""
-                                        )
-                                      }
-                                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md"
-                                    >
-                                      <FiX />
-                                    </button>
-                                  </div>
-                                )
-                              )}
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="text"
-                                  placeholder="添加技术..."
-                                  className="flex-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-200"
-                                  onKeyDown={(e) => {
-                                    if (
-                                      e.key === "Enter" &&
-                                      e.target.value.trim()
-                                    ) {
-                                      e.preventDefault();
-                                      addArrayItem(
-                                        "tech_stack",
-                                        e.target.value
-                                      );
-                                      e.target.value = "";
-                                    }
-                                  }}
-                                />
-                                <button
-                                  onClick={(e) => {
-                                    const input = e.target.previousSibling;
-                                    if (input.value.trim()) {
-                                      addArrayItem("tech_stack", input.value);
-                                      input.value = "";
-                                    }
-                                  }}
-                                  className="px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md"
+                    <div className="px-6 py-4 bg-gray-50 dark:bg-gray-750 text-gray-700 dark:text-gray-300">
+                      <div className="space-y-5 text-left">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                            技术栈
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {job.tech_stack && job.tech_stack.length > 0 ? (
+                              job.tech_stack.map((tech, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-800/40 text-blue-800 dark:text-blue-300"
                                 >
-                                  添加
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              岗位要求
-                            </label>
-                            <div className="space-y-2">
-                              {(editingJob.requirements || []).map(
-                                (req, index) => (
-                                  <div
-                                    key={index}
-                                    className="flex items-center space-x-2"
-                                  >
-                                    <input
-                                      type="text"
-                                      className="flex-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-200"
-                                      value={req}
-                                      onChange={(e) =>
-                                        handleArrayFieldChange(
-                                          "requirements",
-                                          index,
-                                          e.target.value
-                                        )
-                                      }
-                                    />
-                                    <button
-                                      onClick={() =>
-                                        handleArrayFieldChange(
-                                          "requirements",
-                                          index,
-                                          ""
-                                        )
-                                      }
-                                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md"
-                                    >
-                                      <FiX />
-                                    </button>
-                                  </div>
-                                )
-                              )}
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="text"
-                                  placeholder="添加要求..."
-                                  className="flex-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-200"
-                                  onKeyDown={(e) => {
-                                    if (
-                                      e.key === "Enter" &&
-                                      e.target.value.trim()
-                                    ) {
-                                      e.preventDefault();
-                                      addArrayItem(
-                                        "requirements",
-                                        e.target.value
-                                      );
-                                      e.target.value = "";
-                                    }
-                                  }}
-                                />
-                                <button
-                                  onClick={(e) => {
-                                    const input = e.target.previousSibling;
-                                    if (input.value.trim()) {
-                                      addArrayItem("requirements", input.value);
-                                      input.value = "";
-                                    }
-                                  }}
-                                  className="px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md"
-                                >
-                                  添加
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end space-x-3 pt-3">
-                            <button
-                              onClick={cancelEdit}
-                              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300"
-                            >
-                              取消
-                            </button>
-                            <button
-                              onClick={saveEditedJob}
-                              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg"
-                            >
-                              保存
-                            </button>
+                                  {tech}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-sm text-gray-500">
+                                未指定
+                              </span>
+                            )}
                           </div>
                         </div>
-                      ) : (
-                        <div className="space-y-4 text-left">
-                          {/* 查看模式 */}
-                          <div className="flex justify-between">
-                            <div className="flex space-x-1 mb-2">
-                              <span
-                                onClick={() => startEditJob(job)}
-                                className="flex items-center px-3 py-1 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 rounded-md cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
-                              >
-                                <FiEdit className="mr-1" />
-                                编辑
-                              </span>
-                              <span
-                                onClick={() => setConfirmDelete(job._id)}
-                                className="flex items-center px-3 py-1 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 rounded-md cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/40"
-                              >
-                                <FiTrash className="mr-1" />
-                                删除
-                              </span>
-                              {job.url && (
-                                <a
-                                  href={job.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center px-3 py-1 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-650"
-                                >
-                                  <FiExternalLink className="mr-1" />
-                                  原始链接
-                                </a>
-                              )}
-                            </div>
-                            <div className="flex space-x-2">
-                              {statusOptions.map((option) => (
-                                <button
-                                  key={option.value}
-                                  onClick={() =>
-                                    updateJobStatus(job._id, option.value)
-                                  }
-                                  className={`px-2 py-1 text-xs rounded-md ${
-                                    job.status === option.value
-                                      ? `${option.color} font-medium`
-                                      : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-650"
-                                  }`}
-                                >
-                                  {option.label}
-                                </button>
+
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                            职位要求
+                          </h4>
+                          {job.requirements && job.requirements.length > 0 ? (
+                            <ul className="list-disc list-inside text-sm space-y-1">
+                              {job.requirements.map((req, idx) => (
+                                <li key={idx} className="text-left">
+                                  {req}
+                                </li>
                               ))}
-                            </div>
-                          </div>
-
-                          {/* 职位详细信息 */}
-                          <div className="mt-4">
-                            {job.description && (
-                              <div className="mb-4">
-                                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-left">
-                                  职位描述
-                                </h4>
-                                <div className="p-3 bg-white dark:bg-gray-750 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap text-left">
-                                  {job.description}
-                                </div>
-                              </div>
-                            )}
-
-                            {job.requirements &&
-                              job.requirements.length > 0 && (
-                                <div className="mb-4">
-                                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-left">
-                                    岗位要求
-                                  </h4>
-                                  <ul className="list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300 text-sm text-left">
-                                    {job.requirements.map((req, index) => (
-                                      <li key={index}>{req}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-
-                            {job.tech_stack && job.tech_stack.length > 0 && (
-                              <div className="mb-4">
-                                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-left">
-                                  技术栈
-                                </h4>
-                                <div className="flex flex-wrap gap-1.5 text-left">
-                                  {job.tech_stack.map((tech, index) => (
-                                    <span
-                                      key={index}
-                                      className="px-2 py-1 text-xs rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                                    >
-                                      {tech}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-gray-500">未指定</p>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  )}
 
-                  {/* 删除确认对话框 */}
-                  {confirmDelete === job._id && (
-                    <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-red-50 dark:bg-red-900/20">
-                      <div className="flex items-center justify-between text-left">
-                        <p className="text-sm text-red-600 dark:text-red-400">
-                          确定要删除这个职位吗？此操作不可恢复。
-                        </p>
-                        <div className="flex space-x-2">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                            优先资格
+                          </h4>
+                          {job.preferred_qualifications &&
+                          job.preferred_qualifications.length > 0 ? (
+                            <ul className="list-disc list-inside text-sm space-y-1">
+                              {job.preferred_qualifications.map((qual, idx) => (
+                                <li key={idx} className="text-left">
+                                  {qual}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-gray-500">未指定</p>
+                          )}
+                        </div>
+
+                        <div className="flex mt-4">
                           <button
-                            onClick={() => setConfirmDelete(null)}
-                            className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
+                            onClick={() => viewJobReports(job)}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
                           >
-                            取消
-                          </button>
-                          <button
-                            onClick={() => deleteJob(job._id)}
-                            className="px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
-                          >
-                            确认删除
+                            查看分析
                           </button>
                         </div>
                       </div>
@@ -727,7 +409,23 @@ const JobManagerPage = () => {
             </div>
           )}
         </div>
-      </div>
+      )}
+
+      {error && (
+        <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/40 text-red-800 dark:text-red-300 rounded-lg flex items-start">
+          <FiAlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+          <p>{error}</p>
+        </div>
+      )}
+
+      {/* 添加报告列表模态窗口 */}
+      {viewingReportsJobId && (
+        <AnalysisReportsList
+          jobId={viewingReportsJobId}
+          jobTitle={viewingReportsJobTitle}
+          onClose={() => setViewingReportsJobId(null)}
+        />
+      )}
     </div>
   );
 };

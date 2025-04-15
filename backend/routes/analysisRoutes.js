@@ -5,6 +5,7 @@ const {
   createAnalysis,
   getAnalysis,
   getUserAnalyses,
+  getAnalysisByJob,
 } = require("../controllers/analysisController");
 
 // 创建分析
@@ -15,5 +16,8 @@ router.get("/:id", protect, getAnalysis);
 
 // 获取用户所有分析
 router.get("/", protect, getUserAnalyses);
+
+// 获取职位相关的分析报告
+router.get("/job/:jobId", protect, getAnalysisByJob);
 
 module.exports = router;
