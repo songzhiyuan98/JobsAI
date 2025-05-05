@@ -20,9 +20,10 @@ import {
   FiTrash2,
   FiBookmark,
   FiCheckCircle,
+  FiBarChart2,
 } from "react-icons/fi";
-import JobConfirmation from "../components/JobConfirmation";
-import AnalysisReportsList from "../components/AnalysisReportsList";
+import JobConfirmation from "../components/job/JobConfirmation";
+import AnalysisReportsList from "../components/analysis/AnalysisReportsList";
 
 const JobManagerPage = () => {
   const navigate = useNavigate();
@@ -178,8 +179,8 @@ const JobManagerPage = () => {
 
   if (showConfirmation && editingJob) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <div className="mb-6">
+      <div className="container mx-auto max-w-5xl">
+        <div>
           <button
             onClick={cancelEdit}
             className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
@@ -206,14 +207,14 @@ const JobManagerPage = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+    <div className="container mx-auto max-w-6xl">
+      <div className="flex justify-between items-center mb-5">
+        <h1 className="text-xl font-medium text-gray-900 dark:text-white">
           职位管理
         </h1>
         <button
           onClick={() => navigate("/jobs/new")}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center"
+          className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-sm flex items-center"
         >
           <FiPlus className="mr-2" /> 添加职位
         </button>
@@ -224,7 +225,6 @@ const JobManagerPage = () => {
           parsedJob={editingJob}
           setParsedJob={setEditingJob}
           onSuccess={(updatedJob) => {
-            // 更新本地数据
             setJobs(
               jobs.map((j) => (j._id === updatedJob._id ? updatedJob : j))
             );
@@ -234,19 +234,19 @@ const JobManagerPage = () => {
           onCancel={cancelEdit}
         />
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {jobs.length === 0 ? (
-            <div className="p-8 text-center">
+            <div className="p-7 text-center">
               <FiInfo className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 暂无职位
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 您还没有添加任何职位，点击下方按钮添加第一个职位。
               </p>
               <button
                 onClick={() => navigate("/jobs/new")}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 inline-flex items-center"
+                className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-sm inline-flex items-center"
               >
                 <FiPlus className="mr-2" /> 添加职位
               </button>
@@ -259,16 +259,16 @@ const JobManagerPage = () => {
                   className="hover:bg-gray-50 dark:hover:bg-gray-750"
                 >
                   <div
-                    className="px-6 py-4 flex items-center justify-between cursor-pointer"
+                    className="px-5 py-4 flex items-center justify-between cursor-pointer"
                     onClick={() => toggleJobExpand(job._id)}
                   >
                     <div className="flex items-center">
-                      <FiBriefcase className="text-indigo-500 dark:text-indigo-400 mr-3 flex-shrink-0" />
+                      <FiBriefcase className="text-gray-600 dark:text-gray-400 mr-3 flex-shrink-0" />
                       <div className="text-left">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                        <h3 className="text-base font-medium text-gray-900 dark:text-white">
                           {job.title}
                         </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {job.company} · {job.location}
                         </p>
                       </div>
@@ -280,7 +280,7 @@ const JobManagerPage = () => {
                             e.stopPropagation();
                             updateJobStatus(job._id, "interviewed");
                           }}
-                          className="text-yellow-500 hover:text-yellow-600 p-2"
+                          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-2"
                           title="标记为已面试"
                         >
                           <FiBookmark size={18} />
@@ -292,7 +292,7 @@ const JobManagerPage = () => {
                             e.stopPropagation();
                             updateJobStatus(job._id, "offered");
                           }}
-                          className="text-green-500 hover:text-green-600 p-2"
+                          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-2"
                           title="标记为已录用"
                         >
                           <FiCheckCircle size={18} />
@@ -303,7 +303,7 @@ const JobManagerPage = () => {
                           e.stopPropagation();
                           startEditJob(job);
                         }}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-2"
+                        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-2"
                       >
                         <FiEdit size={18} />
                       </button>
@@ -312,7 +312,7 @@ const JobManagerPage = () => {
                           e.stopPropagation();
                           deleteJob(job._id);
                         }}
-                        className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-2"
+                        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-2"
                       >
                         <FiTrash2 size={18} />
                       </button>
@@ -321,23 +321,24 @@ const JobManagerPage = () => {
                           e.stopPropagation();
                           viewJobReports(job);
                         }}
-                        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 p-2"
+                        className="text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700 flex items-center"
                       >
-                        <FiExternalLink size={18} />
+                        <FiBarChart2 className="mr-1" size={16} />
+                        <span className="text-sm">分析报告</span>
                       </button>
                       {expandedJobId === job._id ? (
-                        <FiChevronDown className="text-gray-400" />
+                        <FiChevronDown className="text-gray-400" size={18} />
                       ) : (
-                        <FiChevronRight className="text-gray-400" />
+                        <FiChevronRight className="text-gray-400" size={18} />
                       )}
                     </div>
                   </div>
 
                   {expandedJobId === job._id && (
-                    <div className="px-6 py-4 bg-gray-50 dark:bg-gray-750 text-gray-700 dark:text-gray-300">
-                      <div className="space-y-5 text-left">
+                    <div className="px-5 py-4 bg-gray-50 dark:bg-gray-750 text-gray-700 dark:text-gray-300">
+                      <div className="space-y-4 text-left">
                         <div>
-                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                          <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
                             技术栈
                           </h4>
                           <div className="flex flex-wrap gap-2">
@@ -345,13 +346,13 @@ const JobManagerPage = () => {
                               job.tech_stack.map((tech, idx) => (
                                 <span
                                   key={idx}
-                                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-800/40 text-blue-800 dark:text-blue-300"
+                                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
                                 >
                                   {tech}
                                 </span>
                               ))
                             ) : (
-                              <span className="text-sm text-gray-500">
+                              <span className="text-xs text-gray-500">
                                 未指定
                               </span>
                             )}
@@ -359,7 +360,7 @@ const JobManagerPage = () => {
                         </div>
 
                         <div>
-                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                          <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
                             职位要求
                           </h4>
                           {job.requirements && job.requirements.length > 0 ? (
@@ -371,35 +372,8 @@ const JobManagerPage = () => {
                               ))}
                             </ul>
                           ) : (
-                            <p className="text-sm text-gray-500">未指定</p>
+                            <p className="text-xs text-gray-500">未指定</p>
                           )}
-                        </div>
-
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-                            优先资格
-                          </h4>
-                          {job.preferred_qualifications &&
-                          job.preferred_qualifications.length > 0 ? (
-                            <ul className="list-disc list-inside text-sm space-y-1">
-                              {job.preferred_qualifications.map((qual, idx) => (
-                                <li key={idx} className="text-left">
-                                  {qual}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-sm text-gray-500">未指定</p>
-                          )}
-                        </div>
-
-                        <div className="flex mt-4">
-                          <button
-                            onClick={() => viewJobReports(job)}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                          >
-                            查看分析
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -412,13 +386,12 @@ const JobManagerPage = () => {
       )}
 
       {error && (
-        <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/40 text-red-800 dark:text-red-300 rounded-lg flex items-start">
+        <div className="mt-5 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/40 text-red-800 dark:text-red-300 rounded-lg flex items-start">
           <FiAlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-          <p>{error}</p>
+          <p className="text-sm">{error}</p>
         </div>
       )}
 
-      {/* 添加报告列表模态窗口 */}
       {viewingReportsJobId && (
         <AnalysisReportsList
           jobId={viewingReportsJobId}

@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { authRequest, authSuccess, authFail } from "../store/authSlice";
+import { FiLoader } from "react-icons/fi";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ const AuthCallback = () => {
               })
             );
 
-            navigate("/dashboard");
+            navigate("/");
           } else {
             dispatch(authFail("认证失败"));
             navigate("/login?error=auth_failed");
@@ -60,10 +61,9 @@ const AuthCallback = () => {
   }, [navigate, location, dispatch]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center">
-      <div className="animate-pulse text-indigo-600 dark:text-indigo-400 text-xl font-medium">
-        处理您的登录...
-      </div>
+    <div className="min-h-screen bg-white flex flex-col justify-center items-center">
+      <FiLoader className="animate-spin text-black text-3xl mb-4" />
+      <div className="text-black text-xl font-medium">处理您的登录...</div>
     </div>
   );
 };

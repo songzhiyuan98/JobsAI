@@ -1,6 +1,7 @@
 import React from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
+import LoginReminderModal from "./loginmodal";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
@@ -15,12 +16,12 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    // 重定向到登录页面，并保存原始目标路径
-    return <Navigate to="/" state={{ from: location }} replace />;
+    // 直接渲染弹窗
+    return <LoginReminderModal show={true} onClose={() => {}} />;
   }
 
   // 给受保护路由内容添加顶部间距
-  return <div className="pt-10">{children}</div>;
+  return <div>{children}</div>;
 };
 
 export default ProtectedRoute;

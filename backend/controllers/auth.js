@@ -35,7 +35,6 @@ exports.register = async (req, res, next) => {
 
     sendTokenResponse(user, 201, res);
   } catch (err) {
-    console.error(err);
     res.status(500).json({
       success: false,
       message: "服务器错误，请稍后再试",
@@ -89,7 +88,6 @@ exports.login = async (req, res, next) => {
 
     sendTokenResponse(user, 200, res);
   } catch (err) {
-    console.error(err);
     res.status(500).json({
       success: false,
       message: "服务器错误，请稍后再试",
@@ -107,6 +105,7 @@ exports.googleCallback = async (req, res, next) => {
     const tokenData = await googleOAuthClient.getToken(code);
     const { tokens } = tokenData;
     const idToken = tokens.id_token;
+    const accessToken = tokens.access_token;
 
     const ticket = await googleOAuthClient.verifyIdToken({
       idToken,
@@ -131,6 +130,7 @@ exports.googleCallback = async (req, res, next) => {
         existingUser.authProviders.push({
           provider: "google",
           providerId: googleId,
+          accessToken: accessToken,
         });
         user = await existingUser.save();
       } else {
@@ -142,16 +142,18 @@ exports.googleCallback = async (req, res, next) => {
             {
               provider: "google",
               providerId: googleId,
+              accessToken: accessToken,
             },
           ],
         });
       }
     } else {
-      // 更新最后登录时间
+      // 更新最后登录时间和accessToken
       const googleProvider = user.authProviders.find(
         (p) => p.provider === "google"
       );
       googleProvider.lastLogin = Date.now();
+      googleProvider.accessToken = accessToken;
       await user.save();
     }
 
@@ -161,7 +163,6 @@ exports.googleCallback = async (req, res, next) => {
     // 重定向到前端应用，带上令牌
     res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
   } catch (err) {
-    console.error("Google认证错误:", err);
     res.redirect(`${process.env.FRONTEND_URL}/login?error=google_auth_failed`);
   }
 };
@@ -171,14 +172,46 @@ exports.googleCallback = async (req, res, next) => {
 // @access  Private
 exports.getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id);
+    // 使用 select 确保包含 accessToken 字段
+    const user = await User.findById(req.user.id).select(
+      "+authProviders.accessToken"
+    );
+
+    // 如果是 Google 登录用户，获取 Google 用户信息
+    if (user.authProviders.some((p) => p.provider === "google")) {
+      const googleProvider = user.authProviders.find(
+        (p) => p.provider === "google"
+      );
+
+      try {
+        // 使用 Google 公开 API 获取用户信息
+        const response = await fetch(
+          `https://www.googleapis.com/oauth2/v3/userinfo?alt=json&access_token=${googleProvider.accessToken}`
+        );
+        const data = await response.json();
+
+        // 更新用户的 googleProfile
+        user.googleProfile = {
+          picture: data.picture,
+          given_name: data.given_name,
+          family_name: data.family_name,
+        };
+
+        // 保存更新后的用户信息
+        await user.save();
+      } catch (err) {
+        // 静默处理错误
+      }
+    }
+
+    // 重新查询用户以确保返回最新数据
+    const updatedUser = await User.findById(req.user.id);
 
     res.status(200).json({
       success: true,
-      data: user,
+      data: updatedUser,
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({
       success: false,
       message: "服务器错误，请稍后再试",

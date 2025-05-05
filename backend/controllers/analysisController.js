@@ -5,15 +5,26 @@ const {
   analyzeResumeMatch,
   extractStructuredData,
   getAnalysisById,
+  generateGpt4oAnalysis,
 } = require("../services/resumeAnalysisService");
+const {
+  processResumeFile,
+  mapToResumeModel,
+} = require("../services/resumeParser");
+const { parseJobDescription } = require("../services/jobParser");
+const path = require("path");
+const fs = require("fs");
+const checkSubscription = require("../middleware/checkSubscription");
+const Gpt4oAnalysis = require("../models/gpt4oAnalysis");
 
 /**
  * 创建简历分析
  */
 const createAnalysis = async (req, res) => {
   try {
-    const { resumeId, jobId } = req.body;
+    const { resumeId, jobId, model } = req.body;
     const userId = req.user.id;
+    console.log("[后端] 开始创建分析...");
 
     if (!jobId || !resumeId) {
       return res.status(400).json({
@@ -60,50 +71,69 @@ const createAnalysis = async (req, res) => {
       });
     }
 
-    // 分析简历与职位匹配度
-    const analysisResult = await analyzeResumeMatch(job, resume);
-
-    // 验证结构化数据
-    if (!analysisResult.structured || !analysisResult.structured.matchScore) {
-      console.error("结构化数据无效:", analysisResult.structured);
-      // 尝试重新提取
-      analysisResult.structured = extractStructuredData(
-        analysisResult.rawAnalysis
+    if (model === "gpt-4o") {
+      // 1. 生成 gpt-4o 分析
+      const analysisData = await generateGpt4oAnalysis(job, resume);
+      // 2. 存入 gpt4oAnalysis 表
+      const doc = await Gpt4oAnalysis.create({
+        userId,
+        jobId,
+        resumeId,
+        ...analysisData,
+      });
+      return res.json({ data: doc, model: "gpt4o" });
+    } else {
+      // 1. 生成通用分析
+      const analysisResult = await analyzeResumeMatch(
+        job,
+        resume,
+        model || "gemini-2.0-flash"
       );
+
+      // 验证结构化数据
+      if (!analysisResult.structured || !analysisResult.structured.matchScore) {
+        console.error("结构化数据无效:", analysisResult.structured);
+        // 尝试重新提取
+        analysisResult.structured = extractStructuredData(
+          analysisResult.rawAnalysis
+        );
+      }
+
+      // 2. 存入 analysis 表
+      const analysis = new Analysis({
+        userId,
+        jobId,
+        resumeId,
+        matchScore: analysisResult.structured.matchScore,
+        matchProbability: analysisResult.structured.matchProbability,
+        keyRequirements: analysisResult.structured.keyRequirements,
+        strengths: analysisResult.structured.strengths,
+        weaknesses: analysisResult.structured.weaknesses,
+        possibleQuestions: analysisResult.structured.possibleQuestions,
+        improvementSuggestions:
+          analysisResult.structured.improvementSuggestions,
+        rawAnalysis: analysisResult.rawAnalysis,
+        ats_analysis: analysisResult.structured.ats_analysis,
+        ranking_analysis: analysisResult.structured.ranking_analysis,
+        hr_analysis: analysisResult.structured.hr_analysis,
+        technical_analysis: analysisResult.structured.technical_analysis,
+        model,
+        createdAt: new Date(),
+      });
+
+      await analysis.save();
+
+      // 返回结果
+      return res.status(201).json({
+        success: true,
+        data: {
+          _id: analysis._id,
+          matchScore: analysis.matchScore,
+          matchProbability: analysis.matchProbability,
+        },
+        message: "简历分析完成",
+      });
     }
-
-    // 保存分析结果
-    const analysis = new Analysis({
-      userId: userId,
-      jobId: jobId,
-      resumeId: resumeId,
-      matchScore: analysisResult.structured.matchScore,
-      matchProbability: analysisResult.structured.matchProbability,
-      keyRequirements: analysisResult.structured.keyRequirements,
-      strengths: analysisResult.structured.strengths,
-      weaknesses: analysisResult.structured.weaknesses,
-      possibleQuestions: analysisResult.structured.possibleQuestions,
-      improvementSuggestions: analysisResult.structured.improvementSuggestions,
-      rawAnalysis: analysisResult.rawAnalysis,
-      ats_analysis: analysisResult.structured.ats_analysis,
-      ranking_analysis: analysisResult.structured.ranking_analysis,
-      hr_analysis: analysisResult.structured.hr_analysis,
-      technical_analysis: analysisResult.structured.technical_analysis,
-      createdAt: new Date(),
-    });
-
-    await analysis.save();
-
-    // 返回结果
-    return res.status(201).json({
-      success: true,
-      data: {
-        _id: analysis._id,
-        matchScore: analysis.matchScore,
-        matchProbability: analysis.matchProbability,
-      },
-      message: "简历分析完成",
-    });
   } catch (error) {
     console.error("创建分析失败:", error);
     return res.status(500).json({
@@ -151,22 +181,32 @@ const getAnalysis = async (req, res) => {
 const getUserAnalyses = async (req, res) => {
   try {
     const userId = req.user.id;
+    const { jobId } = req.query; // 从查询参数中获取 jobId
 
-    const analyses = await Analysis.find({ userId: userId })
+    // 构建查询条件
+    const query = { userId };
+    if (jobId) {
+      query.jobId = jobId;
+    }
+
+    const gpt4oAnalyses = await Gpt4oAnalysis.find(query)
       .populate("jobId", "title company")
       .populate("resumeId", "name")
       .sort({ createdAt: -1 });
 
-    // 转换响应格式以兼容前端
-    const formattedAnalyses = analyses.map((analysis) => ({
-      ...analysis._doc,
-      job: analysis.jobId,
-      resume: analysis.resumeId,
-    }));
+    const analyses = await Analysis.find(query)
+      .populate("jobId", "title company")
+      .populate("resumeId", "name")
+      .sort({ createdAt: -1 });
+
+    const allAnalyses = [
+      ...gpt4oAnalyses.map((a) => ({ ...a._doc, model: "gpt4o" })),
+      ...analyses.map((a) => ({ ...a._doc, model: a.model || "gemini" })),
+    ].sort((a, b) => b.createdAt - a.createdAt);
 
     return res.status(200).json({
       success: true,
-      data: formattedAnalyses,
+      data: allAnalyses,
     });
   } catch (error) {
     console.error("获取分析列表失败:", error);
@@ -177,43 +217,8 @@ const getUserAnalyses = async (req, res) => {
   }
 };
 
-// 获取指定职位的所有分析报告
-const getAnalysisByJob = async (req, res) => {
-  try {
-    const { jobId } = req.params;
-    const userId = req.user.id;
-
-    // 查找指定职位的所有分析报告，按创建时间降序排序
-    const reports = await Analysis.find({ jobId: jobId, userId: userId })
-      .populate({
-        path: "resumeId",
-        select: "basicInfo isActive createdAt",
-      })
-      .sort({ createdAt: -1 });
-
-    // 转换响应格式以兼容前端
-    const formattedReports = reports.map((report) => ({
-      ...report._doc,
-      resume: report.resumeId,
-    }));
-
-    return res.status(200).json({
-      success: true,
-      data: formattedReports,
-      message: "获取分析报告成功",
-    });
-  } catch (error) {
-    console.error("获取职位分析报告失败:", error);
-    return res.status(500).json({
-      success: false,
-      message: "服务器错误，无法获取分析报告",
-    });
-  }
-};
-
 module.exports = {
   createAnalysis,
   getAnalysis,
   getUserAnalyses,
-  getAnalysisByJob,
 };

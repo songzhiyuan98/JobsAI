@@ -1,16 +1,26 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../store/authSlice";
+import { logout as authLogout } from "../store/authSlice";
 import { FiUser, FiLogIn, FiZap } from "react-icons/fi";
 import authService from "../services/authService";
+import { Menu, X } from "lucide-react";
+import axios from "axios";
+import { clearPremiumStatus } from "../store/userSlice";
 
 const Navbar = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { subscriptionType } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // 监听滚动事件
   useEffect(() => {
@@ -29,94 +39,162 @@ const Navbar = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserData();
+    } else {
+      setUserData(null);
+    }
+  }, [isAuthenticated]);
+
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.get("/api/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUserData(response.data.data);
+    } catch (err) {
+      setError("获取用户信息失败");
+      console.error("获取用户信息错误:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = () => {
-    // 调用服务层登出
-    authService.logout();
-    // 更新Redux状态
-    dispatch(logout());
-    // 导航到登录页
-    navigate("/");
+    dispatch(clearPremiumStatus());
+    dispatch(authLogout());
+    setUserData(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("userState");
+    localStorage.removeItem("user"); // 这一行也加上，彻底清空
+    navigate("/login");
+  };
+
+  const handleNavToSection = (sectionId) => {
+    if (window.location.pathname === "/") {
+      // 在首页，直接滚动
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      // 不在首页，跳转到首页并带hash
+      navigate(`/#${sectionId}`);
+      // 跳转后首页可用useEffect监听location.hash自动滚动
+    }
+  };
+
+  const getSubscriptionBadge = () => {
+    if (!isAuthenticated) return null;
+    switch (subscriptionType) {
+      case "premium":
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+            会员版
+          </span>
+        );
+      case "enterprise":
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+            企业版
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            免费版
+          </span>
+        );
+    }
   };
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-md"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="w-full bg-white border-b border-gray-100 sticky top-0 z-50">
+      <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex-shrink-0 flex items-center">
-            <Link to="/dashboard" className="flex items-center">
-              <div
-                className={`mr-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 p-1.5 ${
-                  scrolled ? "" : "animate-pulse-slow"
-                }`}
-              >
-                <FiZap className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-indigo-600">JobsAI</span>
-            </Link>
-          </div>
-
           <div className="flex items-center">
-            {isAuthenticated ? (
-              <div className="ml-3 relative">
-                <div>
-                  <button
-                    type="button"
-                    className="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    id="user-menu"
-                    aria-expanded="false"
-                    aria-haspopup="true"
-                    onClick={toggleDropdown}
-                  >
-                    <span className="sr-only">打开用户菜单</span>
-                    <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-800 dark:text-indigo-200 text-lg font-bold">
-                      {user?.name?.charAt(0)}
-                    </div>
-                  </button>
-                </div>
-
+            <Link to="/" className="flex-shrink-0 flex items-center">
+              <span className="text-xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent ml-4">
+                TalentSync
+              </span>
+            </Link>
+            <div className="hidden md:ml-10 md:flex md:space-x-8">
+              <button
+                onClick={() => handleNavToSection("features")}
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-bold bg-transparent"
+              >
+                Features
+              </button>
+              <button
+                onClick={() => handleNavToSection("pricing")}
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-bold bg-transparent"
+              >
+                Pricing
+              </button>
+              <button
+                onClick={() => handleNavToSection("testimonials")}
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-bold bg-transparent"
+              >
+                Testimonials
+              </button>
+              <button
+                onClick={() => handleNavToSection("about")}
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-bold bg-transparent"
+              >
+                About
+              </button>
+            </div>
+          </div>
+          <div className="hidden md:flex items-center space-x-4">
+            {getSubscriptionBadge()}
+            {isAuthenticated && userData ? (
+              <div className="relative">
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center space-x-2 focus:outline-none"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center text-lg font-bold overflow-hidden">
+                    {userData?.googleProfile?.picture ? (
+                      <img
+                        src={userData.googleProfile.picture}
+                        alt="avatar"
+                        className="h-10 w-10 object-cover rounded-lg"
+                      />
+                    ) : (
+                      userData?.name?.charAt(0)
+                    )}
+                  </div>
+                </button>
                 {dropdownOpen && (
-                  <div
-                    className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
-                    role="menu"
-                    aria-orientation="vertical"
-                    aria-labelledby="user-menu"
-                  >
-                    <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600">
-                      <div className="font-medium">{user?.name}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {user?.email}
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                    <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
+                      <div className="font-bold">{user?.name}</div>
+                      <div className="text-xs text-gray-500 truncate">
+                        {userData?.email}
                       </div>
                     </div>
-                    <Link
-                      to="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
-                      role="menuitem"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      个人资料
-                    </Link>
-                    <Link
-                      to="/settings"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
-                      role="menuitem"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      设置
-                    </Link>
                     <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
-                      role="menuitem"
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        navigate("/personal-center");
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-100"
+                    >
+                      个人中心
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        handleLogout();
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-100"
                     >
                       退出登录
                     </button>
@@ -124,24 +202,109 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
-                <Link
-                  to="/"
-                  className="text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium"
+              <>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-bold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
                 >
-                  登录
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  Log In
+                </button>
+                <button
+                  onClick={() => navigate("/register")}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-bold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-black hover:bg-gray-800 text-white h-9 px-4 py-2"
                 >
-                  注册
-                </Link>
-              </div>
+                  Sign Up
+                </button>
+              </>
             )}
+          </div>
+          <div className="flex items-center md:hidden">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
           </div>
         </div>
       </div>
+      {/* Mobile menu */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-white border-b border-gray-100">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <Link
+              to="#features"
+              className="block px-3 py-2 rounded-md text-base font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Features
+            </Link>
+            <Link
+              to="#pricing"
+              className="block px-3 py-2 rounded-md text-base font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Pricing
+            </Link>
+            <Link
+              to="#testimonials"
+              className="block px-3 py-2 rounded-md text-base font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Testimonials
+            </Link>
+            <Link
+              to="#about"
+              className="block px-3 py-2 rounded-md text-base font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              About
+            </Link>
+          </div>
+          <div className="pt-4 pb-3 border-t border-gray-200">
+            <div className="flex items-center px-5 space-x-3">
+              {getSubscriptionBadge()}
+              {isAuthenticated ? (
+                <>
+                  <span className="text-gray-700">{user?.name}</span>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900"
+                  >
+                    退出登录
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      navigate("/login");
+                    }}
+                    className="inline-flex items-center justify-center rounded-md text-sm font-bold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 w-full"
+                  >
+                    Log In
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      navigate("/register");
+                    }}
+                    className="inline-flex items-center justify-center rounded-md text-sm font-bold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-black hover:bg-gray-800 text-white h-9 px-4 py-2 w-full"
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

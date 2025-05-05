@@ -34,12 +34,21 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
+      accessToken: {
+        type: String,
+        select: false,
+      },
       lastLogin: {
         type: Date,
         default: Date.now,
       },
     },
   ],
+  googleProfile: {
+    picture: String,
+    given_name: String,
+    family_name: String,
+  },
   profileCompleted: {
     type: Boolean,
     default: false,

@@ -73,7 +73,7 @@ const analysisSchema = new mongoose.Schema({
   },
   jobId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Job",
+    ref: "UserJob",
     required: true,
   },
   overallMatchScore: Number,

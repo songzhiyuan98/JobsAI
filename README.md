@@ -1,149 +1,175 @@
-# 🤖 AI Interview Assistant
+# 项目规则与技术规范
 
-**AI Interview Assistant** 是一个智能面试准备平台，支持自动抓取最新招聘信息，结合简历和个人信息，生成个性化的行为面试与技术面试问题，并提供评分、匹配度分析与简历优化建议。
-
-> 🚀 全栈 AI 项目 | 前端：React | 后端：Node.js | 爬虫：Python | AI：OpenAI API
-
----
-
-## 🔥 项目亮点
-
-### 📌 实时抓取职位信息（JD）
-
-- 定时爬虫获取最新招聘网站的 JD（支持关键词过滤）
-- 清洗、解析并存储在数据库中供用户筛选
-
-### 🤖 智能面试模拟系统
-
-- 根据用户选择的 JD + 简历内容，生成 **个性化面试问题**
-  - 行为类面试问题（STAR 法则）
-  - 技术类问题（岗位相关）
-- 每一轮 AI 问题都针对简历和岗位定制
-
-### 📊 简历智能分析
-
-- AI 自动评估用户简历与 JD 的匹配程度
-- 模拟 HR 视角提供“初筛建议”与“改进建议”
-
-### 📄 简历优化建议
-
-- 提取 JD 关键词，与简历内容对比
-- 生成可提升匹配度的简历修改建议
-
----
-
-## 🧱 技术栈
-
-| 部分     | 技术                               |
-| -------- | ---------------------------------- |
-| 前端     | React + Vite + Tailwind CSS        |
-| 后端     | Node.js + Express                  |
-| 爬虫     | Python + BeautifulSoup / Requests  |
-| 数据库   | MongoDB Atlas                      |
-| AI 引擎  | OpenAI GPT-4 API                   |
-| 部署推荐 | Vercel（前端）+ Render/AWS（后端） |
-
----
-
-## 📁 项目结构
+## 项目目录结构
 
 ```
-ai-interview-assistant/
-├── frontend/         # React 前端
-├── backend/          # Node.js 后端
-├── crawler/          # Python 爬虫脚本（抓 JD）
-├── data/             # JD 示例数据（本地 JSON / CSV）
-├── docs/             # 项目架构与功能文档
-├── .env              # API Key 等环境变量（不上传）
-└── README.md
+JobsAI/
+├── backend/                        # 后端服务
+│   ├── app.js                      # Express 应用入口
+│   ├── setup.js                    # 初始化设置
+│   ├── models/                     # Mongoose 数据模型
+│   │   ├── User.js                 # 用户模型
+│   │   ├── Subscription.js         # 会员订阅模型
+│   │   ├── Resume.js               # 简历模型
+│   │   ├── Analysis.js             # 智能分析模型
+│   │   ├── Interview.js            # 面试相关模型
+│   │   ├── Session.js              # 会话模型
+│   │   └── UserJob.js              # 用户职位关联
+│   ├── controllers/                # 业务控制器
+│   │   ├── auth.js                 # 用户认证
+│   │   ├── paymentController.js    # Stripe 支付与订阅
+│   │   ├── resumeController.js     # 简历相关
+│   │   ├── jobController.js        # 职位相关
+│   │   ├── analysisController.js   # 智能分析
+│   │   └── interviewController.js  # 面试相关
+│   ├── routes/                     # 路由定义
+│   │   ├── auth.js                 # 用户认证路由
+│   │   ├── payment.js              # 支付与订阅路由
+│   │   ├── resumeRoutes.js         # 简历路由
+│   │   ├── jobRoutes.js            # 职位路由
+│   │   ├── analysisRoutes.js       # 智能分析路由
+│   │   └── interviewRoutes.js      # 面试路由
+│   ├── middleware/                 # 中间件
+│   │   ├── auth.js                 # 登录校验中间件
+│   │   ├── checkSubscription.js    # 订阅状态检查中间件
+│   │   └── uploadMiddleware.js     # 文件上传中间件
+│   ├── services/                   # 业务服务
+│   │   ├── resumeAnalysisService.js # 简历分析服务
+│   │   ├── aiPrompts.js            # AI 提示词管理
+│   │   ├── aiService.js            # AI 服务集成
+│   │   ├── jobParser.js            # 职位解析服务
+│   │   └── resumeParser.js         # 简历解析服务
+│   ├── config/                     # 配置文件
+│   │   └── googleOAuth.js          # Google OAuth 配置
+│   ├── uploads/                    # 文件上传目录
+│   ├── temp/                       # 临时文件目录
+│   └── src/                        # 源代码目录
+├── frontend/                       # 前端项目
+│   ├── src/
+│   │   ├── App.js                  # 前端主入口
+│   │   ├── index.js                # React 入口
+│   │   ├── pages/                  # 页面级组件
+│   │   │   ├── LoginPage.js        # 登录页
+│   │   │   ├── RegisterPage.js     # 注册页
+│   │   │   ├── Dashboard.js        # 仪表盘主面板
+│   │   │   ├── PersonalCenter.js        # 个人中心主面板
+│   │   │   ├── personalcenter/     # 个人中心子页面
+│   │   │   │   ├── OverviewSection.js   # 个人中心-概览
+│   │   │   │   ├── ProfileSection.js    # 个人中心-资料卡
+│   │   │   │   ├── ResumeSection.js     # 个人中心-简历区
+│   │   │   │   ├── AnalysisSection.js   # 个人中心-分析区
+│   │   │   ├── payment/           # 支付相关页面
+│   │   │   │   ├── PaymentPage.js      # 会员支付页
+│   │   │   │   ├── PaymentSuccess.js   # 支付成功页
+│   │   │   │   ├── PaymentCancel.js    # 支付取消页
+│   │   │   ├── JobManagerPage.js   # 职位管理
+│   │   │   ├── AnalysisStartPage.js# 智能分析入口
+│   │   │   ├── AnalysisResultPage.js# 智能分析结果
+│   │   │   └── ...                 # 其他页面
+│   │   ├── components/             # 复用型组件
+│   │   │   ├── Navbar.js           # 顶部导航栏
+│   │   │   ├── ProtectedRoute.js   # 路由保护
+│   │   │   ├── dashboard/          # 仪表盘相关组件
+│   │   │   │   ├── PricingSection.js # 会员价格与操作区
+│   │   │   │   ├── UploadSection.js  # 简历上传区
+│   │   │   │   ├── UserProfile.js    # 用户信息卡片
+│   │   │   │   ├── LoadingMaskAI.js  # AI加载动画
+│   │   │   │   └── ...               # 其他仪表盘组件
+│   │   │   ├── job/                 # 职位相关组件
+│   │   │   ├── resume/              # 简历相关组件
+│   │   │   ├── analysis/            # 智能分析相关组件
+│   │   │   └── AITypingAnimation.js # AI 打字动画
+│   │   ├── store/                   # Redux 相关
+│   │   │   ├── userSlice.js         # 用户/会员状态
+│   │   │   ├── userActions.js       # 用户相关异步 action
+│   │   │   ├── authSlice.js         # 登录状态
+│   │   │   └── index.js             # store 入口
+│   │   ├── services/                # API 封装
+│   │   ├── styles/                  # 全局样式
+│   │   ├── assets/                  # 静态资源
+│   │   └── ...                      # 其他前端相关
+├── .cursor/rules/                   # AI/项目规则
+│   ├── projectrule.mdc              # 项目级规则
+│   └── customrule.mdc               # AI 行为规则
+└── README.md                        # 项目说明
 ```
 
----
+## 技术栈与风格
 
-## 🚀 快速启动
+- 前端：React 18 + Redux Toolkit + Tailwind CSS，所有组件为函数式组件，禁止 class 组件。
+- 后端：Node.js + Express + Mongoose，所有模型放在 backend/models，控制器放在 backend/controllers。
+- API 请求统一用 axios，所有 API 路径以 /api/ 开头，API 封装在 src/services 下。
+- 状态管理：Redux Toolkit，所有 slice/action 放在 src/store 下，action 命名统一为 setXxxStatus、clearXxxStatus。
+- 路由：react-router-dom，所有页面放在 src/pages 下，受保护页面用 ProtectedRoute 包裹。
+- 统一使用 ES6+ 语法，所有异步操作用 async/await。
+- 组件、函数、变量命名采用 camelCase，组件文件名用大驼峰（如 PricingSection.js）。
+- 重要业务流程、接口、hook 必须有注释说明。
 
-### 前端启动（React）
+## 主要接口与数据结构
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+- 用户认证：
 
-### 后端启动（Node.js）
+  - POST /api/auth/register：注册，返回 { data: userObject }
+  - POST /api/auth/login：登录，返回 { data: userObject }
+  - GET /api/auth/google：Google OAuth 登录跳转
+  - GET /api/auth/google/callback：Google OAuth 回调
+  - GET /api/auth/me：获取当前用户信息，返回 { data: userObject }
+  - GET /api/auth/logout：退出登录
 
-```bash
-cd backend
-npm install
-npm run dev
-```
+- 订阅与支付：
 
-### 启动爬虫（抓取 JD）
+  - POST /api/payment/create-checkout-session：创建 Stripe 订阅支付会话，返回 { url }
+  - POST /api/payment/webhook：Stripe webhook，处理 checkout.session.completed 事件，写入订阅记录
+  - GET /api/payment/get-subscription-status：获取当前用户订阅状态，返回 { data: { subscriptionType, features, endDate, ... } }
+  - POST /api/payment/cancel-subscription：取消 Stripe 订阅，自动取消自动续费并同步数据库
 
-```bash
-cd crawler
-python indeed_spider.py
-```
+- 简历管理：
 
----
+  - POST /api/resumes/upload：上传简历，需要文件上传中间件
+  - GET /api/resumes：获取用户所有简历
+  - GET /api/resumes/active：获取当前激活的简历
+  - GET /api/resumes/:id：获取单个简历详情
+  - PUT /api/resumes/:id/set-active：设置简历为激活状态
+  - PUT /api/resumes/:id/verify：验证并更新简历
+  - PUT /api/resumes/:id：更新简历
+  - DELETE /api/resumes/:id：删除简历
 
-## 🧪 示例功能截图（建议你后续放图）
+- 职位管理：
 
-- ✅ 选择职位 → 上传简历 → 获取模拟面试问题
-- ✅ JD 自动抓取列表 + 匹配打分
-- ✅ 简历优化建议展示页面
+  - POST /api/jobs/parse：解析职位描述文本
+  - POST /api/jobs：保存用户职位描述
+  - GET /api/jobs/user：获取用户保存的所有职位
+  - GET /api/jobs/:id：获取单个职位详情
+  - PUT /api/jobs/:id：更新职位
+  - DELETE /api/jobs/:id：删除职位
 
----
+- 智能分析：
 
-## 🛠️ 项目进度
+  - POST /api/analysis：创建分析
+  - GET /api/analysis/:id：获取分析详情
+  - GET /api/analysis：获取用户所有分析
+  - GET /api/analysis/job/:jobId：获取职位相关的分析报告
+  - POST /api/analysis/upload-analyze：上传简历+JD 并分析，需要文件上传中间件
 
-- [ ] MVP：输入 JD + 简历 → 生成面试问题 + 匹配度分析
-- [ ] 初版爬虫：支持手动触发抓取 JD
-- [ ] 多轮对话模拟（模拟面试流程）
-- [ ] 用户系统（保存历史记录、多个简历）
-- [ ] 自动推荐匹配度高的职位
-- [ ] 简历上传解析支持 PDF / DOCX
+- 面试相关：
+  - POST /api/interview：创建面试
+  - GET /api/interview/:id：获取面试详情
+  - POST /api/interview/message：发送面试消息
 
----
+## 业务规范与 UI/UX
 
-## 🎯 为什么要做这个项目？
+- 用户分为 free、premium、enterprise 三种订阅类型，权限依赖 subscriptionType 字段。
+- 会员升级为企业时，原有 premium 订阅自动取消，数据库只保留一条 active 订阅。
+- 取消订阅时，需调用 Stripe API 取消自动续费，并同步数据库状态。
+- Stripe webhook 只处理 checkout.session.completed 事件，写入订阅记录时 endDate 必须为 Stripe subscription 的 current_period_end。
+- 前端会员状态需通过 /api/payment/get-subscription-status 拉取，并同步到 Redux。
+- PricingSection 页面：当前计划按钮显示"取消订阅"并可点击，其他计划按钮始终可点击（除非已是 enterprise），升级/联系销售按钮跳转支付或销售页面。
+- 会员状态、权限、模型选择等 UI 只依赖 Redux 状态，禁止直接用 localStorage。
+- 退出登录时，Redux 和 localStorage 必须全部清空会员状态。
+- 会员相关操作（升级、取消、支付成功）后，必须重新拉取订阅状态并同步 Redux。
+- 重要操作（如取消订阅）需二次确认弹窗。
+- 错误需有用户友好的提示，后端接口出错时返回 { message: string }。
 
-当前的求职流程对求职者来说充满了繁琐与重复：
+## 其他
 
-### 🧱 面试准备过程中的核心痛点
-
-- **面试问题千篇一律，缺乏个性化针对**  
-  求职者通常只能获得通用模板问题（如“请介绍一下你自己”），很难找到与自己简历和岗位描述（JD）高度匹配的面试问题。使用 ChatGPT 等 AI 工具时，也需要反复手动复制 JD 和简历，效率低下。
-
-- **简历是否匹配 JD 难以判断**  
-  大多数求职者无法快速判断自己的简历是否满足 JD 的核心要求。缺乏自动化匹配分析工具，导致很多简历在初筛阶段被过滤。
-
-- **岗位信息分散，准备效率低下**  
-  用户需要在多个平台（官网、招聘网站、ATS 系统等）来回跳转，每个 JD 都需要重新修改简历、准备面试问题，重复性极高，严重影响效率。
-
-- **工具分散，流程割裂**  
-  简历修改工具、JD 分析、模拟面试平台互不相通，导致面试准备流程复杂，用户需要多平台操作，没有统一的闭环体验。
-
----
-
-### 🧠 本项目如何解决？
-
-**AI Interview Assistant** 致力于构建一个**一站式智能面试准备平台**，自动完成从 JD 获取到面试模拟与简历优化的全流程，显著提升面试准备效率。
-
-| 当前问题             | 本项目解决方案                                  |
-| -------------------- | ----------------------------------------------- |
-| 面试问题不精准       | GPT 自动生成与 JD/简历高度相关的行为 & 技术问题 |
-| 简历不知如何修改     | AI 分析 JD 与简历差距，提供个性化优化建议       |
-| 多平台操作繁琐       | 内置爬虫自动抓取热门招聘网站的 JD，统一展示     |
-| 每个岗位都需重复准备 | 系统可保存历史记录，自动推荐匹配岗位与建议      |
-
----
-
-## 📜 License
-
-MIT © 2025 AI Interview Assistant by Zhiyuan Song
-
-```
-
----
-```
+- 项目所有规则、接口、权限、风格等需在 README.md 和 projectrule.mdc 里同步更新，便于团队协作和 AI 辅助开发。

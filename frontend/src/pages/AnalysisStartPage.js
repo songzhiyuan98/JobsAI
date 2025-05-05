@@ -22,8 +22,8 @@ import {
   FiUpload,
   FiPlus,
 } from "react-icons/fi";
-import ResumePreview from "../components/ResumePreview";
-import JobConfirmation from "../components/JobConfirmation";
+import ResumePreview from "../components/resume/ResumePreview";
+import JobConfirmation from "../components/job/JobConfirmation";
 
 const AnalysisStartPage = () => {
   const navigate = useNavigate();

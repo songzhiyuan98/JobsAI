@@ -5,6 +5,7 @@ const authRoutes = require("./routes/auth");
 const resumeRoutes = require("./routes/resumeRoutes");
 const interviewRoutes = require("./routes/interviewRoutes");
 const analysisRoutes = require("./routes/analysisRoutes");
+const { router: paymentRouter, handleWebhook } = require("./routes/payment");
 require("dotenv").config();
 const cors = require("cors");
 const path = require("path");
@@ -24,7 +25,14 @@ app.use(
   })
 );
 
-// 中间件
+// 1. 只让 webhook 路由用 raw
+app.post(
+  "/api/payment/webhook",
+  express.raw({ type: "application/json" }),
+  handleWebhook
+);
+
+// 2. 其他中间件
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -36,6 +44,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/resumes", resumeRoutes);
 app.use("/api/interviews", interviewRoutes);
 app.use("/api/analysis", analysisRoutes);
+app.use("/api/payment", paymentRouter);
 
 // 错误处理中间件
 app.use((err, req, res, next) => {
