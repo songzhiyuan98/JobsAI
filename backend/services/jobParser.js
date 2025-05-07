@@ -64,61 +64,71 @@ async function parseJobDescription(jobText) {
   const cleanedJobText = preprocessJobText(jobText);
   console.log("预处理后的JD文本长度:", cleanedJobText.length);
 
-  const prompt = `You are a professional job description parser.
+  const prompt = `
+你是一位专业的职位描述解析助手。请将下方JD文本提取为结构化 JSON，字段和格式严格遵循如下 schema，所有字段都必须有值，缺失请用 "" 或 []，只返回有效 JSON，无解释、无注释、无代码块标记。
 
-Please analyze the following job post text and extract the following fields in valid JSON format.  
-All values must be extracted from the text, and fields should not be invented.  
-If a field is not available, return an empty string or empty array.  
-Return **valid and parsable JSON only**, no explanation, no comments.
+schema:
+{
+  "title": "",
+  "company": "",
+  "location": "",
+  "job_type": "",
+  "salary": "",
+  "description": "",
+  "requirements": [],
+  "preferred_qualifications": [],
+  "tech_stack": [],
+  "benefits": []
+}
 
-Fields to extract:
-- title: Job title
-- company: Company name
-- location: Work location (e.g. city, state, remote, hybrid)
-- job_type: Type of job (e.g. full-time, part-time, contract)
-- salary: Salary or hourly rate (e.g. "$40 per hour", "$100k-$120k/year")
-- description: Short paragraph summarizing the job
-- requirements: List of required qualifications or skills
-- preferred_qualifications: List of preferred qualifications or "nice to have"
-- tech_stack: Array of programming languages, tools, or frameworks mentioned
-- benefits: List of company benefits (if mentioned)
-
-Job Post Text:
-""" 
+原始JD文本：
 ${cleanedJobText}
-"""
-
-Respond ONLY with a valid JSON object matching the structure above.`;
+`;
 
   try {
-    console.log("正在通过OpenAI解析职位描述...");
-
-    const openai = new axios.create({
-      baseURL: "https://api.openai.com/v1",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    console.log("正在通过 Gemini 解析职位描述...");
+    const response = await axios.post(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 1200,
+        },
       },
-    });
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": process.env.GEMINI_API_KEY,
+        },
+        timeout: 20000, // 20秒超时
+      }
+    );
 
-    const completion = await openai.post("/chat/completions", {
-      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-    });
-
-    const responseContent = completion.data.choices[0].message.content;
-    console.log("AI解析完成，正在验证JSON结构...");
+    let content =
+      response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    // 健壮处理 markdown 代码块
+    const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    if (codeBlockMatch) {
+      content = codeBlockMatch[1];
+    }
+    content = content.trim();
 
     try {
-      const parsedData = JSON.parse(responseContent);
+      const parsedData = JSON.parse(content);
       return parsedData;
     } catch (jsonError) {
-      throw new Error("无法解析AI返回的JSON数据");
+      console.error("JSON解析错误:", jsonError);
+      console.error("原始响应:", content);
+      throw new Error("无法解析Gemini返回的JSON数据");
     }
   } catch (error) {
-    console.error("AI解析错误:", error);
+    console.error("Gemini解析错误:", error);
     // 返回基本空结构
     return {
       title: "",

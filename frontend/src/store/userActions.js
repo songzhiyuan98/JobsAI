@@ -17,15 +17,13 @@ export const fetchAndSetSubscriptionStatus = () => async (dispatch) => {
       })
     );
   } catch (e) {
-    // 失败时降级为免费
-    dispatch(
-      setPremiumStatus({
-        isPremium: false,
-        isEnterprise: false,
-        subscriptionEndDate: null,
-        subscriptionType: "free",
-        features: {},
-      })
-    );
+    if (e.response && e.response.status === 401) {
+      // token 失效，自动登出
+      dispatch({ type: "auth/logout" });
+      // 可选：window.location.href = "/login";
+    } else {
+      // 其他错误不降级，弹窗提示或忽略
+      // alert("网络异常，会员状态获取失败");
+    }
   }
 };

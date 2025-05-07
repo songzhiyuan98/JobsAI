@@ -136,6 +136,71 @@ export default function UploadSection() {
     }
   };
 
+  const handleCoverLetterSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (!resume || !jd) {
+      setError("请上传简历并填写JD");
+      return;
+    }
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    setLoading(true);
+    try {
+      setStep(1);
+      console.log("[前端] 上传简历...");
+      const formData = new FormData();
+      formData.append("resume", resume);
+      const token = localStorage.getItem("token");
+      const resumeRes = await axios.post("/api/resumes/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const resumeObj = resumeRes.data.data;
+      console.log("[前端] 简历上传并解析完成:", resumeObj);
+
+      setStep(2);
+      console.log("[前端] 解析JD...");
+      const jdParseRes = await axios.post(
+        "/api/jobs/parse",
+        { jobText: jd },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const jdParsed = jdParseRes.data.data;
+      const jdSaveRes = await axios.post("/api/jobs", jdParsed, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const jdObj = jdSaveRes.data.data;
+      console.log("[前端] JD解析并保存完成:", jdObj);
+
+      setStep(3);
+      console.log("[前端] 生成求职信...");
+      console.log("selectedModel", selectedModel);
+      const clRes = await axios.post(
+        "/api/cover-letters",
+        {
+          jobId: jdObj._id,
+          resumeId: resumeObj._id,
+          model: selectedModel,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const coverLetterId = clRes.data.data._id;
+      console.log("[前端] 求职信生成完成，ID:", coverLetterId);
+      navigate(`/cover-letter/${coverLetterId}`);
+    } catch (err) {
+      console.error("[前端] 求职信生成失败:", err);
+      setError("生成失败：" + (err.response?.data?.message || err.message));
+      setStep(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const isModelAvailable = (model) => {
     if (model === "gemini-2.0-flash") return true; // Gemini始终可用
     if (subscriptionType === "enterprise") return true;
@@ -434,70 +499,80 @@ export default function UploadSection() {
         )}
 
         {activeTab === "coverletter" && (
-          <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div
-                  className="border-2 border-dashed border-gray-200 rounded-lg p-8 flex flex-col items-center justify-center text-center relative overflow-hidden group hover:border-gray-300 transition-colors"
-                  style={{ minHeight: "200px" }}
-                >
-                  <input
-                    type="file"
-                    id="resume-upload-cl"
-                    className="hidden"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => setResume(e.target.files[0])}
-                  />
-                  <label
-                    htmlFor="resume-upload-cl"
-                    className="cursor-pointer w-full h-full flex flex-col items-center justify-center"
+          <form
+            id="coverletter-form"
+            onSubmit={handleCoverLetterSubmit}
+            className="relative"
+          >
+            <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div
+                    className="border-2 border-dashed border-gray-200 rounded-lg p-8 flex flex-col items-center justify-center text-center relative overflow-hidden group hover:border-gray-300 transition-colors"
+                    style={{ minHeight: "200px" }}
                   >
-                    <Upload className="h-10 w-10 text-gray-400 mb-4 group-hover:text-gray-600 transition-colors" />
-                    <h3 className="text-lg font-medium mb-2">上传您的简历</h3>
+                    <input
+                      type="file"
+                      id="resume-upload-cl"
+                      className="hidden"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => setResume(e.target.files[0])}
+                    />
+                    <label
+                      htmlFor="resume-upload-cl"
+                      className="cursor-pointer w-full h-full flex flex-col items-center justify-center"
+                    >
+                      <Upload className="h-10 w-10 text-gray-400 mb-4 group-hover:text-gray-600 transition-colors" />
+                      <h3 className="text-lg font-medium mb-2">上传您的简历</h3>
+                      <p className="text-sm text-gray-500 mb-4">
+                        支持 PDF, DOCX 格式
+                      </p>
+                      {resume && (
+                        <div className="mt-4 text-sm text-green-600">
+                          已选择: {resume.name}
+                        </div>
+                      )}
+                    </label>
+                  </div>
+
+                  <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 flex flex-col text-center relative overflow-hidden group hover:border-gray-300 transition-colors">
+                    <FileText className="h-10 w-10 text-gray-400 mb-4 mx-auto group-hover:text-gray-600 transition-colors" />
+                    <h3 className="text-lg font-medium mb-2">输入职位描述</h3>
                     <p className="text-sm text-gray-500 mb-4">
-                      支持 PDF, DOCX 格式
+                      粘贴JD或手动输入
                     </p>
-                    {resume && (
-                      <div className="mt-4 text-sm text-green-600">
-                        已选择: {resume.name}
-                      </div>
-                    )}
-                  </label>
+                    <textarea
+                      placeholder="在此粘贴或输入职位描述..."
+                      className="min-h-[120px] resize-none flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={jd}
+                      onChange={(e) => setJd(e.target.value)}
+                    />
+                  </div>
                 </div>
 
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 flex flex-col text-center relative overflow-hidden group hover:border-gray-300 transition-colors">
-                  <FileText className="h-10 w-10 text-gray-400 mb-4 mx-auto group-hover:text-gray-600 transition-colors" />
-                  <h3 className="text-lg font-medium mb-2">输入职位描述</h3>
-                  <p className="text-sm text-gray-500 mb-4">粘贴JD或手动输入</p>
-                  <textarea
-                    placeholder="在此粘贴或输入职位描述..."
-                    className="min-h-[120px] resize-none flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    value={jd}
-                    onChange={(e) => setJd(e.target.value)}
-                  />
+                <div className="mt-8 flex justify-center">
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-black hover:bg-gray-800 text-white px-8 py-2 relative overflow-hidden group"
+                    disabled={!isAuthenticated || loading}
+                  >
+                    <span className="relative z-10">
+                      {loading ? "生成中..." : "生成求职信"}
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-black opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  </button>
                 </div>
+                {!isAuthenticated && (
+                  <div className="mt-2 text-sm text-gray-500 text-center">
+                    请先登录后再使用求职信生成功能
+                  </div>
+                )}
               </div>
-
-              <div className="mt-8 flex justify-center">
-                <button
-                  type="submit"
-                  form="coverletter-form"
-                  className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-black hover:bg-gray-800 text-white px-8 py-2 relative overflow-hidden group"
-                  disabled={!isAuthenticated || loading}
-                >
-                  <span className="relative z-10">
-                    {loading ? "生成中..." : "生成求职信"}
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-black opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                </button>
-              </div>
-              {!isAuthenticated && (
-                <div className="mt-2 text-sm text-gray-500 text-center">
-                  请先登录后再使用求职信生成功能
-                </div>
-              )}
             </div>
-          </div>
+            {loading && activeTab === "coverletter" && (
+              <LoadingMaskAI type="coverletter" />
+            )}
+          </form>
         )}
       </div>
       <Tooltip id="gpt-3.5-tooltip" />

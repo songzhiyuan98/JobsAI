@@ -1,12 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const pdfParse = require("pdf-parse");
-const { OpenAI } = require("openai");
-
-// 创建OpenAI实例
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const axios = require("axios");
 
 /**
  * 从PDF简历文件中提取文本
@@ -26,113 +21,67 @@ async function extractTextFromPDF(filePath) {
  * 使用OpenAI API直接解析简历到完全匹配Resume模型的结构
  */
 async function parseResumeToStructure(resumeText) {
-  const prompt = `You are a professional resume parser.
+  const prompt = `
+你是一位专业的简历解析助手。请将下方原始简历文本提取为结构化 JSON，字段和格式严格遵循如下 schema，所有字段都必须有值，缺失请用 "" 或 []，只返回有效 JSON，无解释、无注释、无代码块标记。
 
-Please read the raw resume text below and extract structured data in strict JSON format, using the following schema. All field names must match exactly, and use \`null\` or empty arrays where data is missing.
-
-Return the result as **valid JSON only** — no explanation or comments.
-
-Please ensure all property values follow standard JSON format with double quotes only.
-
-Resume JSON schema:
-\`\`\`json
+schema:
 {
-  "basicInfo": {
-    "fullName": "",
-    "email": "",
-    "phone": "",
-    "location": "",
-    "links": [
-      {
-        "type": "",
-        "url": ""
-      }
-    ]
-  },
-  "education": [
-    {
-      "institution": "",
-      "degree": "",
-      "major": "",
-      "gpa": 0,
-      "startDate": null,
-      "endDate": null,
-      "courses": []
-    }
-  ],
-  "experience": [
-    {
-      "company": "",
-      "position": "",
-      "location": "",
-      "startDate": null,
-      "endDate": null,
-      "current": false,
-      "instruction": "",
-      "descriptions": []
-    }
-  ],
-  "projects": [
-    {
-      "name": "",
-      "instruction": "",
-      "descriptions": [],
-      "startDate": null,
-      "endDate": null,
-      "links": []
-    }
-  ],
-  "skills": [
-    {
-      "category": "Programming Languages",
-      "items": []
-    },
-    {
-      "category": "Frameworks & Libraries",
-      "items": []
-    },
-    {
-      "category": "Databases, DevOps & Tools",
-      "items": []
-    }
-  ],
-  "honors": [
-    {
-      "title": "",
-      "date": null
-    }
-  ]
+  "basicInfo": { "fullName": "", "email": "", "phone": "", "location": "", "links": [] },
+  "education": [ { "institution": "", "degree": "", "major": "", "gpa": 0, "startDate": null, "endDate": null, "courses": [] } ],
+  "experience": [ { "company": "", "position": "", "location": "", "startDate": null, "endDate": null, "current": false, "instruction": "", "descriptions": [] } ],
+  "projects": [ { "name": "", "instruction": "", "descriptions": [], "startDate": null, "endDate": null, "links": [] } ],
+  "skills": [ { "category": "Programming Languages", "items": [] }, { "category": "Frameworks & Libraries", "items": [] }, { "category": "Databases, DevOps & Tools", "items": [] } ],
+  "honors": [ { "title": "", "date": null } ]
 }
-\`\`\`
 
-Now, extract structured resume data from the following plain text:
-
-${resumeText}`;
+原始简历文本：
+${resumeText}
+`;
 
   try {
-    console.log("正在通过OpenAI解析简历...");
+    console.log("正在通过 Gemini 解析简历...");
+    const response = await axios.post(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 2500,
+        },
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": process.env.GEMINI_API_KEY,
+        },
+        timeout: 25000, // 25秒超时，防止卡死
+      }
+    );
 
-    const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-    });
+    let content =
+      response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    // 健壮处理 markdown 代码块
+    const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    if (codeBlockMatch) {
+      content = codeBlockMatch[1];
+    }
+    content = content.trim();
 
-    const responseContent = completion.choices[0].message.content;
-    console.log("AI解析完成，正在验证JSON结构...");
-
-    // 解析和验证JSON
     try {
-      const parsedData = JSON.parse(responseContent);
+      const parsedData = JSON.parse(content);
       return parsedData;
     } catch (jsonError) {
       console.error("JSON解析错误:", jsonError);
-      console.error("原始响应:", responseContent);
-      throw new Error("无法解析AI返回的JSON数据");
+      console.error("原始响应:", content);
+      throw new Error("无法解析Gemini返回的JSON数据");
     }
   } catch (error) {
-    console.error("AI解析错误:", error);
+    console.error("Gemini解析错误:", error);
     // 返回基本空结构
     return {
       basicInfo: {

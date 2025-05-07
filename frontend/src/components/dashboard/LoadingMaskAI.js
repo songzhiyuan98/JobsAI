@@ -1,22 +1,36 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Brain } from "lucide-react";
 
-const stepText = [
-  "",
-  "正在解析简历...",
-  "正在解析职位描述...",
-  "正在智能匹配分析...",
-];
+// 不同类型的 step 文案
+const stepTextMap = {
+  analysis: [
+    "",
+    "正在解析简历...",
+    "正在解析职位描述...",
+    "正在智能匹配分析...",
+  ],
+  coverletter: [
+    "",
+    "正在解析简历...",
+    "正在解析职位描述...",
+    "正在生成求职信...",
+  ],
+};
 
 export default function LoadingMaskAI({
   step = 1,
   analysisLines = [],
   currentLine = 0,
+  type = "analysis",
 }) {
-  // 直接显示文本，无打字机动画
-  const mainText = stepText[step];
+  // 选择类型对应的 step 文案
+  const stepText = stepTextMap[type] || stepTextMap.analysis;
+  const mainText = stepText[step] || "AI智能处理中...";
+  // 求职信生成时，analysisLines 通常为空，直接用 mainText
   const descText =
-    step === 3 && analysisLines[currentLine] ? analysisLines[currentLine] : "";
+    step === 3 && analysisLines.length > 0 && analysisLines[currentLine]
+      ? analysisLines[currentLine]
+      : "";
 
   return (
     <AnimatePresence>

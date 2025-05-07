@@ -23,7 +23,7 @@ import PaymentSuccess from "./pages/payment/PaymentSuccess";
 import PaymentCancel from "./pages/payment/PaymentCancel";
 import axios from "axios";
 import { fetchAndSetSubscriptionStatus } from "./store/userActions";
-
+import CoverLetterReport from "./pages/CoverLetterReport";
 function App() {
   const dispatch = useDispatch();
 
@@ -160,6 +160,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PaymentCancel />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cover-letter/:id"
+            element={
+              <ProtectedRoute>
+                <CoverLetterReport />
               </ProtectedRoute>
             }
           />

@@ -6,6 +6,7 @@ const resumeRoutes = require("./routes/resumeRoutes");
 const interviewRoutes = require("./routes/interviewRoutes");
 const analysisRoutes = require("./routes/analysisRoutes");
 const { router: paymentRouter, handleWebhook } = require("./routes/payment");
+const coverLetterRoutes = require("./routes/coverLetterRoutes");
 require("dotenv").config();
 const cors = require("cors");
 const path = require("path");
@@ -45,6 +46,7 @@ app.use("/api/resumes", resumeRoutes);
 app.use("/api/interviews", interviewRoutes);
 app.use("/api/analysis", analysisRoutes);
 app.use("/api/payment", paymentRouter);
+app.use("/api/cover-letters", coverLetterRoutes);
 
 // 错误处理中间件
 app.use((err, req, res, next) => {
