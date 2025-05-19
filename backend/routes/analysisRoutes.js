@@ -8,7 +8,7 @@ const {
 } = require("../controllers/analysisController");
 const upload = require("../middleware/uploadMiddleware");
 const Gpt4oAnalysis = require("../models/gpt4oAnalysis");
-const Analysis = require("../models/analysis");
+const Analysis = require("../models/Analysis");
 const checkSubscription = require("../middleware/checkSubscription");
 
 // 创建分析
