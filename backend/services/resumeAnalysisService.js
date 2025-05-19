@@ -1,6 +1,6 @@
 // 简历分析服务
 const OpenAI = require("openai");
-const Analysis = require("../models/analysis");
+const Analysis = require("../models/Analysis");
 const { default: axios } = require("axios");
 const { gpt4oPrompt, geminiPrompt, defaultPrompt } = require("./aiPrompts");
 const Gpt4oAnalysis = require("../models/gpt4oAnalysis");
