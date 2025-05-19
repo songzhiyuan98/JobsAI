@@ -1,6 +1,6 @@
 const UserJob = require("../models/UserJob");
 const Resume = require("../models/Resume");
-const Analysis = require("../models/analysis");
+const Analysis = require("../models/Analysis");
 const {
   analyzeResumeMatch,
   extractStructuredData,
