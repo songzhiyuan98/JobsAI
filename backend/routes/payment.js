@@ -3,9 +3,6 @@ const router = express.Router();
 const paymentController = require("../controllers/paymentController");
 const { protect } = require("../middleware/auth");
 const authMiddleware = require("../middleware/auth");
-const {
-  cancelStripeSubscription,
-} = require("../controllers/paymentController");
 
 // 只对 webhook 路由用 express.raw
 router.post(
@@ -26,9 +23,10 @@ router.get(
   paymentController.getSubscriptionStatus
 );
 
-router.post("/cancel-subscription", protect, cancelStripeSubscription);
+router.post(
+  "/cancel-subscription",
+  protect,
+  paymentController.cancelStripeSubscription
+);
 
-module.exports = {
-  router,
-  handleWebhook: paymentController.handleWebhook,
-};
+module.exports = router;

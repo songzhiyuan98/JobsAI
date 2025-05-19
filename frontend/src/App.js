@@ -7,7 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthCallback from "./pages/AuthCallback";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { authRequest, authSuccess, authFail } from "./store/authSlice";
 import authService from "./services/authService";
 import JobManagerPage from "./pages/JobManagerPage";
@@ -17,15 +17,15 @@ import GeminiAnalysisReport from "./components/analysis/GeminiAnalysisReport";
 import Gpt4oAnalysisReport from "./components/analysis/Gpt4oAnalysisReport";
 import PersonalCenter from "./pages/PersonalCenter";
 import "./styles/print.css";
-import { setPremiumStatus, clearPremiumStatus } from "./store/userSlice";
 import PaymentPage from "./pages/payment/PaymentPage";
 import PaymentSuccess from "./pages/payment/PaymentSuccess";
 import PaymentCancel from "./pages/payment/PaymentCancel";
-import axios from "axios";
-import { fetchAndSetSubscriptionStatus } from "./store/userActions";
 import CoverLetterReport from "./pages/CoverLetterReport";
+import { fetchSubscriptionStatus } from "./store/userActions";
+
 function App() {
   const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -43,6 +43,9 @@ function App() {
               token,
             })
           );
+
+          // 获取订阅状态
+          dispatch(fetchSubscriptionStatus());
         } catch (error) {
           dispatch(authFail(error.message || "会话已过期"));
           authService.logout();
@@ -51,32 +54,6 @@ function App() {
     };
 
     initializeAuth();
-  }, [dispatch]);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      axios
-        .get("/api/payment/get-subscription-status", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((res) => {
-          dispatch(setPremiumStatus(res.data));
-          localStorage.setItem("userState", JSON.stringify(res.data));
-        })
-        .catch(() => {
-          dispatch(clearPremiumStatus());
-        });
-    } else {
-      dispatch(clearPremiumStatus());
-    }
-  }, [dispatch]);
-
-  useEffect(() => {
-    // 登录后或页面刷新后拉取
-    if (localStorage.getItem("token")) {
-      dispatch(fetchAndSetSubscriptionStatus());
-    }
   }, [dispatch]);
 
   return (

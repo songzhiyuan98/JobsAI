@@ -3,14 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useState } from "react";
 import axios from "axios";
-import { setPremiumStatus } from "../../store/userSlice";
+import { setSubscriptionStatus } from "../../store/userSlice";
 
 // Pricing Section Component
 export default function PricingSection() {
   const navigate = useNavigate();
-  const { subscriptionType, subscriptionEndDate } = useSelector(
-    (state) => state.user
-  );
+  const { subscriptionStatus } = useSelector((state) => state.user);
   const [showCancel, setShowCancel] = useState(false);
   const dispatch = useDispatch();
 
@@ -24,15 +22,7 @@ export default function PricingSection() {
         }
       );
       // 重新拉取会员状态，并更新到期时间
-      dispatch(
-        setPremiumStatus({
-          isPremium: subscriptionType === "premium",
-          isEnterprise: subscriptionType === "enterprise",
-          subscriptionEndDate: res.data.periodEnd,
-          subscriptionType,
-          features: {},
-        })
-      );
+      dispatch(setSubscriptionStatus("free"));
       setShowCancel(false);
       // 你也可以弹出提示
     } catch (e) {
@@ -57,12 +47,12 @@ export default function PricingSection() {
           {/* Free Plan */}
           <div
             className={`bg-white p-8 rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md flex flex-col relative ${
-              subscriptionType === "free"
+              subscriptionStatus === "free"
                 ? "before:content-[''] before:absolute before:-inset-[2px] before:bg-gradient-to-r before:from-orange-500 before:via-orange-400 before:to-orange-500 before:animate-[gradient_3s_linear_infinite] before:rounded-xl before:-z-10"
                 : ""
             }`}
           >
-            {subscriptionType === "free" && (
+            {subscriptionStatus === "free" && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gray-600 text-white px-4 py-1 rounded-full text-xs font-bold shadow">
                 当前计划
               </div>
@@ -76,36 +66,38 @@ export default function PricingSection() {
             <ul className="space-y-3 mb-8">
               <li className="flex items-start">
                 <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-600">每天10次简历分析</span>
+                <span className="text-gray-600">无限次免费智能简历分析</span>
               </li>
               <li className="flex items-start">
                 <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-600">每天20次求职信生成</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-600">基础版HR和技术官视角分析</span>
+                <span className="text-gray-600">无限次免费求职信生成</span>
               </li>
               <li className="flex items-start">
                 <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-600">
-                  使用 Gemini 2.0 Flash 模型
+                  每日体验 GPT-4o 智能简历优化
+                </span>
+              </li>
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-600">
+                  每日体验 GPT-4o 个性化求职信
                 </span>
               </li>
             </ul>
 
             <button
               className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-auto"
-              disabled={subscriptionType === "free"}
+              disabled={subscriptionStatus === "free"}
             >
-              {subscriptionType === "free" ? "当前计划" : "开始使用"}
+              {subscriptionStatus === "free" ? "当前计划" : "开始使用"}
             </button>
           </div>
 
           {/* Pro Plan */}
           <div
             className={`bg-white p-8 rounded-xl shadow-md border border-gray-200 transition-all hover:shadow-lg flex flex-col relative ${
-              subscriptionType === "premium"
+              subscriptionStatus === "premium"
                 ? "before:content-[''] before:absolute before:-inset-[2px] before:bg-gradient-to-r before:from-orange-500 before:via-orange-400 before:to-orange-500 before:animate-[gradient_3s_linear_infinite] before:rounded-xl before:-z-10"
                 : ""
             }`}
@@ -113,7 +105,7 @@ export default function PricingSection() {
             <div className="absolute top-0 right-0 bg-black text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg">
               最受欢迎
             </div>
-            {subscriptionType === "premium" && (
+            {subscriptionStatus === "premium" && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-1 rounded-full text-xs font-bold shadow">
                 当前计划
               </div>
@@ -128,22 +120,18 @@ export default function PricingSection() {
             <ul className="space-y-3 mb-8">
               <li className="flex items-start">
                 <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-600">无限次简历分析</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-600">每日不限次求职信生成</span>
+                <span className="text-gray-600">免费版所有基础功能</span>
               </li>
               <li className="flex items-start">
                 <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-600">
-                  专业版HR和技术官视角分析（细节+建议）
+                  无限次 GPT-4o 智能简历优化与建议
                 </span>
               </li>
               <li className="flex items-start">
                 <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-600">
-                  解锁所有高级模型（GPT-4o / Claude 3）
+                  无限次 GPT-4o 个性化求职信定制
                 </span>
               </li>
             </ul>
@@ -151,17 +139,19 @@ export default function PricingSection() {
             <button
               className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-black hover:bg-gray-800 text-white h-10 px-4 py-2 mt-auto"
               onClick={
-                subscriptionType === "premium"
+                subscriptionStatus === "premium"
                   ? () => setShowCancel(true)
-                  : subscriptionType === "enterprise"
+                  : subscriptionStatus === "enterprise"
                   ? undefined
-                  : () => navigate("/payment?plan=premium")
+                  : () => {
+                      navigate("/payment?plan=premium");
+                    }
               }
-              disabled={subscriptionType === "enterprise"}
+              disabled={subscriptionStatus === "enterprise"}
             >
-              {subscriptionType === "premium"
+              {subscriptionStatus === "premium"
                 ? "取消订阅"
-                : subscriptionType === "enterprise"
+                : subscriptionStatus === "enterprise"
                 ? "已开通企业版"
                 : "立即升级"}
             </button>
@@ -170,12 +160,12 @@ export default function PricingSection() {
           {/* Enterprise Plan */}
           <div
             className={`bg-white p-8 rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md flex flex-col relative ${
-              subscriptionType === "enterprise"
+              subscriptionStatus === "enterprise"
                 ? "before:content-[''] before:absolute before:-inset-[2px] before:bg-gradient-to-r before:from-orange-500 before:via-orange-400 before:to-orange-500 before:animate-[gradient_3s_linear_infinite] before:rounded-xl before:-z-10"
                 : ""
             }`}
           >
-            {subscriptionType === "enterprise" && (
+            {subscriptionStatus === "enterprise" && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-600 text-white px-4 py-1 rounded-full text-xs font-bold shadow">
                 当前计划
               </div>
@@ -190,36 +180,52 @@ export default function PricingSection() {
             <ul className="space-y-3 mb-8">
               <li className="flex items-start">
                 <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-600">批量简历和JD上传与分析</span>
+                <span className="text-gray-600">专业版全部高级功能</span>
               </li>
               <li className="flex items-start">
                 <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-600">高级筛选与多维度排序</span>
+                <span className="text-gray-600">
+                  批量简历智能分析（支持100份/次）
+                </span>
               </li>
               <li className="flex items-start">
                 <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-600">团队协作与权限管理</span>
+                <span className="text-gray-600">
+                  批量求职信智能生成（支持50份/次）
+                </span>
               </li>
               <li className="flex items-start">
                 <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-600">数据导出与可视化报告</span>
+                <span className="text-gray-600">
+                  企业级团队协作与权限管理系统
+                </span>
               </li>
               <li className="flex items-start">
                 <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-600">API接入与系统集成</span>
+                <span className="text-gray-600">
+                  专业候选人评估与人才分析报告
+                </span>
+              </li>
+              <li className="flex items-start">
+                <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-600">
+                  专属客户成功经理一对一服务
+                </span>
               </li>
             </ul>
 
             <button
               className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-auto"
               onClick={
-                subscriptionType === "enterprise"
+                subscriptionStatus === "enterprise"
                   ? () => setShowCancel(true)
-                  : () => navigate("/payment?plan=enterprise")
+                  : () => {
+                      navigate("/payment?plan=enterprise");
+                    }
               }
               disabled={false}
             >
-              {subscriptionType === "enterprise" ? "取消订阅" : "联系销售"}
+              {subscriptionStatus === "enterprise" ? "取消订阅" : "联系销售"}
             </button>
           </div>
         </div>

@@ -9,7 +9,7 @@ const ResumeSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    default: "我的简历",
+    default: "My Resume",
   },
   originalFile: {
     fileName: String,
@@ -18,10 +18,6 @@ const ResumeSchema = new mongoose.Schema({
       type: Date,
       default: Date.now,
     },
-  },
-  isVerified: {
-    type: Boolean,
-    default: false,
   },
   isActive: {
     type: Boolean,

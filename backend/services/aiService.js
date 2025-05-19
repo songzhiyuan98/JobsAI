@@ -228,9 +228,314 @@ const extractEvaluation = (message) => {
   return evaluation;
 };
 
+// AI服务通用工具函数
+const axios = require("axios");
+
+/**
+ * 智能裁剪内容，保留最重要信息
+ * @param {string} content 需要裁剪的内容
+ * @param {number} maxLength 最大长度
+ * @param {string} contentType 内容类型
+ * @returns {string} 裁剪后的内容
+ */
+function truncateContent(content, maxLength = 6000, contentType = "generic") {
+  if (content.length <= maxLength) return content;
+
+  try {
+    const obj = JSON.parse(content);
+
+    // 职位描述特定优化
+    if (contentType === "job") {
+      // 保留最重要字段，完全不裁剪
+      const criticalFields = ["title", "company", "position", "location"];
+
+      // 中等程度裁剪字段
+      if (obj.description && obj.description.length > 300) {
+        obj.description = obj.description.substring(0, 300) + "...";
+      }
+
+      // 优先裁剪字段
+      if (obj.requirements && Array.isArray(obj.requirements)) {
+        obj.requirements = obj.requirements.slice(0, 5);
+      }
+
+      // 裁剪不太重要的详细字段
+      if (obj.benefits && obj.benefits.length > 150) {
+        obj.benefits = obj.benefits.substring(0, 150) + "...";
+      }
+
+      // 最低优先级字段，如果内容仍然过大可以完全移除
+      if (JSON.stringify(obj).length > maxLength) {
+        delete obj.additionalInfo;
+        delete obj.companyDescription;
+      }
+    } else if (contentType === "resume") {
+      // 保留的关键字段
+      const criticalFields = [
+        "name",
+        "education",
+        "skills",
+        "projects",
+        "technicalSkills",
+        "workExperience",
+      ];
+
+      // 工作经历裁剪 - 保留最近和最相关的
+      if (obj.workExperience && Array.isArray(obj.workExperience)) {
+        // 最多保留3段工作经历
+        obj.workExperience = obj.workExperience.slice(0, 3);
+
+        // 精简每段工作经历的描述
+        obj.workExperience.forEach((exp) => {
+          if (exp.description && exp.description.length > 200) {
+            exp.description = exp.description.substring(0, 200) + "...";
+          }
+
+          // 保留成就/责任中最重要的部分
+          if (exp.achievements && Array.isArray(exp.achievements)) {
+            exp.achievements = exp.achievements.slice(0, 3);
+          }
+        });
+      }
+
+      // 教育经历保留，但简化描述
+      if (obj.education) {
+        if (Array.isArray(obj.education)) {
+          // 只保留最高学历
+          obj.education = [obj.education[0]];
+        }
+        // 删除不必要的详细信息，但保留学校、专业和学位
+      }
+
+      // 技能部分保留，但可能需要精简
+      if (obj.skills && Array.isArray(obj.skills)) {
+        // 每类技能只保留最关键的几个
+        obj.skills = obj.skills.slice(0, 10);
+      }
+
+      // 项目经历保留，但减少数量和简化描述
+      if (obj.projects && Array.isArray(obj.projects)) {
+        obj.projects = obj.projects.slice(0, 2); // 只保留最重要的2个项目
+        obj.projects.forEach((proj) => {
+          if (proj.description && proj.description.length > 150) {
+            proj.description = proj.description.substring(0, 150) + "...";
+          }
+        });
+      }
+
+      // 可以完全移除的低优先级字段
+      delete obj.summary; // 个人总结可以移除
+      delete obj.interests; // 兴趣爱好可以移除
+      delete obj.references; // 推荐人可以移除
+      delete obj.certifications; // 证书如果不是特别重要可以移除
+      delete obj.additionalInfo; // 额外信息可以移除
+    }
+
+    return JSON.stringify(obj);
+  } catch (e) {
+    // 更智能的文本裁剪...
+  }
+}
+
+/**
+ * 智能请求AI服务，支持自动裁剪和重试
+ * @param {Object} options - 请求选项
+ * @param {string} options.model - 使用的模型，如 "gemini-2.0-flash" 或 "gpt-4o"
+ * @param {string} options.prompt - 提示词
+ * @param {string} options.jobContent - 职位内容
+ * @param {string} options.resumeContent - 简历内容
+ * @param {number} options.maxRetries - 最大重试次数，默认2
+ * @param {number} options.contentReductionPercent - 每次重试减少内容百分比，默认30%
+ * @returns {Object} AI响应结果
+ */
+async function robustAIRequest(options) {
+  const {
+    model,
+    prompt,
+    jobContent,
+    resumeContent,
+    maxRetries = 2,
+    contentReductionPercent = 30,
+  } = options;
+
+  let currentJobContent = jobContent;
+  let currentResumeContent = resumeContent;
+  let attempts = 0;
+  let error = null;
+
+  // 调试日志
+  console.log(
+    `[AIService] 开始请求 ${model}，内容长度：职位=${currentJobContent.length}，简历=${currentResumeContent.length}`
+  );
+
+  while (attempts <= maxRetries) {
+    try {
+      attempts++;
+
+      // 替换提示词中的变量
+      const fullPrompt = prompt
+        .replace("{{jobStr}}", currentJobContent)
+        .replace("{{resumeStr}}", currentResumeContent);
+
+      // 根据不同模型发送请求
+      if (model.startsWith("gemini")) {
+        const response = await axios.post(
+          "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+          {
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: fullPrompt }],
+              },
+            ],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 3500,
+            },
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": process.env.GEMINI_API_KEY,
+            },
+            timeout: 60000, // 60秒超时
+          }
+        );
+
+        const content =
+          response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        console.log(
+          `[AIService] ${model} 请求成功，返回内容长度：${content.length}`
+        );
+
+        // 处理返回内容，提取JSON
+        const json = extractJsonFromText(content);
+        return {
+          content,
+          json,
+          model,
+        };
+      } else {
+        // OpenAI模型
+        const response = await openai.chat.completions.create({
+          model: model === "gpt-4o" ? "gpt-4o" : "gpt-3.5-turbo",
+          messages: [{ role: "user", content: fullPrompt }],
+          temperature: 0.7,
+          max_tokens: 3500,
+          response_format:
+            model === "gpt-4o" ? undefined : { type: "json_object" },
+          timeout: 60000, // 60秒超时
+        });
+
+        const content = response.choices[0].message.content;
+        console.log(
+          `[AIService] ${model} 请求成功，返回内容长度：${content.length}`
+        );
+
+        // 处理返回内容，提取JSON
+        const json = extractJsonFromText(content);
+        return {
+          content,
+          json,
+          model,
+        };
+      }
+    } catch (err) {
+      error = err;
+      console.error(`[AIService] 第${attempts}次请求失败:`, err.message || err);
+
+      if (attempts > maxRetries) break;
+
+      // 计算下一次需要裁剪的长度
+      const reductionFactor = contentReductionPercent / 100;
+
+      // 对简历内容裁剪更激进一些
+      let targetResumeLength = Math.floor(
+        currentResumeContent.length * (1 - reductionFactor * 1.5)
+      );
+      // 对职位内容裁剪相对保守一些
+      let targetJobLength = Math.floor(
+        currentJobContent.length * (1 - reductionFactor * 0.8)
+      );
+
+      // 如果职位内容已经很短，优先裁剪简历
+      if (
+        currentJobContent.length < 1000 &&
+        currentResumeContent.length > 3000
+      ) {
+        targetResumeLength = Math.floor(
+          currentResumeContent.length * (1 - reductionFactor * 2)
+        );
+        targetJobLength = currentJobContent.length; // 尽量不裁剪职位
+      }
+
+      console.log(
+        `[AIService] 裁剪内容后重试，目标长度：职位=${targetJobLength}，简历=${targetResumeLength}`
+      );
+
+      // 裁剪内容
+      currentJobContent = truncateContent(
+        currentJobContent,
+        targetJobLength,
+        "job"
+      );
+      currentResumeContent = truncateContent(
+        currentResumeContent,
+        targetResumeLength,
+        "resume"
+      );
+    }
+  }
+
+  // 所有重试都失败
+  throw new Error(`AI请求失败(${model})：${error?.message || "未知错误"}`);
+}
+
+/**
+ * 从AI返回的文本中提取JSON
+ * @param {string} text - AI返回的原始文本
+ * @returns {Object} - 解析后的JSON对象
+ */
+function extractJsonFromText(text) {
+  // 尝试解析Markdown代码块
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  let content = codeBlockMatch ? codeBlockMatch[1] : text;
+  content = content.trim();
+
+  // 尝试修复常见的JSON格式问题
+  content = content
+    // 修复未闭合的数组
+    .replace(/,\s*]/g, "]")
+    // 修复未闭合的对象
+    .replace(/,\s*}/g, "}")
+    // 修复多余的逗号
+    .replace(/,(\s*[}\]])/g, "$1")
+    // 修复可能的转义问题
+    .replace(/\\"/g, '"')
+    // 修复可能的换行问题
+    .replace(/\n/g, " ")
+    // 修复可能的制表符问题
+    .replace(/\t/g, " ");
+
+  try {
+    return JSON.parse(content);
+  } catch (e) {
+    console.error(
+      "[AIService] JSON解析失败:",
+      e,
+      "原始内容:",
+      content.substring(0, 200)
+    );
+    throw new Error("AI返回内容解析失败");
+  }
+}
+
 module.exports = {
   generateInitialContext,
   generateAIResponse,
   extractQuestion,
   extractEvaluation,
+  robustAIRequest,
+  truncateContent,
+  extractJsonFromText,
 };

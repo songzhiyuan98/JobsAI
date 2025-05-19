@@ -4,6 +4,7 @@ const Analysis = require("../models/analysis");
 const { default: axios } = require("axios");
 const { gpt4oPrompt, geminiPrompt, defaultPrompt } = require("./aiPrompts");
 const Gpt4oAnalysis = require("../models/gpt4oAnalysis");
+const { robustAIRequest, extractJsonFromText } = require("./aiService");
 
 // 创建OpenAI客户端实例
 const openaiClient = new OpenAI({
@@ -24,154 +25,100 @@ const analyzeResumeMatch = async (job, resume, model = "gemini-2.0-flash") => {
     // 调试打印
     console.log("[分析服务] 收到模型参数:", model);
 
-    // 选择prompt模板并替换变量
+    // 选择prompt模板
     let systemPrompt = "";
     if (model.startsWith("gemini")) {
-      systemPrompt = geminiPrompt
-        .replace("{{jobStr}}", jobStr)
-        .replace("{{resumeStr}}", resumeStr);
+      systemPrompt = geminiPrompt;
       console.log(
         "[分析服务] 使用Gemini，prompt片段:",
         systemPrompt.slice(0, 30)
       );
     } else {
-      systemPrompt = defaultPrompt
-        .replace("{{jobStr}}", jobStr)
-        .replace("{{resumeStr}}", resumeStr);
+      systemPrompt = defaultPrompt;
       console.log(
         "[分析服务] 使用其他模型，prompt片段:",
         systemPrompt.slice(0, 30)
       );
     }
 
-    let response;
+    let result;
     if (model.startsWith("gemini")) {
-      console.log("[分析服务] 调用Gemini接口");
-      response = await axios.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-        {
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: systemPrompt }],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 3500,
-          },
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": process.env.GEMINI_API_KEY,
-          },
-        }
-      );
-      let content =
-        response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      console.log("[分析服务] Gemini原始返回内容:", content);
-      // 只做必要的健壮处理：去除markdown代码块和首尾空白
-      const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-      if (codeBlockMatch) {
-        content = codeBlockMatch[1];
+      console.log("[分析服务] 调用增强版Gemini接口（支持自动重试和内容裁剪）");
+      try {
+        // 使用robustAIRequest处理请求
+        const aiResponse = await robustAIRequest({
+          model,
+          prompt: systemPrompt,
+          jobContent: jobStr,
+          resumeContent: resumeStr,
+          contentTypes: { job: "job", resume: "resume" }, // 标记内容类型
+          maxRetries: 2,
+          contentReductionPercent: 30,
+        });
+
+        // 提取结果
+        result = aiResponse.json;
+      } catch (error) {
+        console.error("[分析服务] Gemini处理失败：", error);
+        throw new Error("简历分析服务出现错误，请稍后再试");
       }
-      content = content.trim();
-      let result = JSON.parse(content);
-      return {
-        rawAnalysis: content,
-        structured: {
-          matchScore:
-            result.matchScore || result.ats_analysis?.match_score_percent || 0,
-          matchProbability: result.matchProbability || "中",
-          keyRequirements:
-            result.keyRequirements || result.ats_analysis?.keywords_hit || [],
-          strengths:
-            result.strengths ||
-            result.ranking_analysis?.rank_boost_suggestions ||
-            [],
-          weaknesses:
-            result.weaknesses || result.ats_analysis?.missing_keywords || [],
-          possibleQuestions:
-            result.possibleQuestions ||
-            result.technical_analysis?.expected_tech_questions?.flatMap(
-              (q) => q.questions
-            ) ||
-            [],
-          improvementSuggestions:
-            result.improvementSuggestions ||
-            result.ats_analysis?.improvement_suggestions ||
-            [],
-          ats_analysis: result.ats_analysis || {},
-          ranking_analysis: result.ranking_analysis || {},
-          hr_analysis: result.hr_analysis || {},
-          technical_analysis: result.technical_analysis || {},
-        },
-      };
     } else {
       console.log("[分析服务] 调用OpenAI其他模型接口:", model);
-      response = await openaiClient.chat.completions.create({
+      const response = await openaiClient.chat.completions.create({
         model: model,
-        messages: [{ role: "system", content: systemPrompt }],
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt
+              .replace("{{jobStr}}", jobStr)
+              .replace("{{resumeStr}}", resumeStr),
+          },
+        ],
         temperature: 0.7,
         max_tokens: 3500,
         response_format: { type: "json_object" },
       });
+
+      // 解析JSON响应
+      try {
+        result = JSON.parse(response.choices[0].message.content);
+      } catch (e) {
+        console.error("JSON解析失败:", e);
+        throw new Error("AI返回结果解析失败");
+      }
     }
 
-    // 解析JSON响应
-    let result;
-    try {
-      result = JSON.parse(response.choices[0].message.content);
-      return {
-        rawAnalysis: response.choices[0].message.content,
-        structured: {
-          matchScore:
-            result.matchScore || result.ats_analysis?.match_score_percent || 0,
-          matchProbability: result.matchProbability || "中",
-          keyRequirements:
-            result.keyRequirements || result.ats_analysis?.keywords_hit || [],
-          strengths:
-            result.strengths ||
-            result.ranking_analysis?.rank_boost_suggestions ||
-            [],
-          weaknesses:
-            result.weaknesses || result.ats_analysis?.missing_keywords || [],
-          possibleQuestions:
-            result.possibleQuestions ||
-            result.technical_analysis?.expected_tech_questions?.flatMap(
-              (q) => q.questions
-            ) ||
-            [],
-          improvementSuggestions:
-            result.improvementSuggestions ||
-            result.ats_analysis?.improvement_suggestions ||
-            [],
-          ats_analysis: result.ats_analysis || {},
-          ranking_analysis: result.ranking_analysis || {},
-          hr_analysis: result.hr_analysis || {},
-          technical_analysis: result.technical_analysis || {},
-        },
-      };
-    } catch (e) {
-      console.error("JSON解析失败:", e);
-      return {
-        rawAnalysis: response.choices[0].message.content,
-        structured: {
-          matchScore: 0,
-          matchProbability: "未知",
-          keyRequirements: [],
-          strengths: [],
-          weaknesses: [],
-          possibleQuestions: [],
-          improvementSuggestions: [],
-          ats_analysis: {},
-          ranking_analysis: {},
-          hr_analysis: {},
-          technical_analysis: {},
-        },
-      };
-    }
+    // 返回结构化内容
+    return {
+      rawAnalysis: JSON.stringify(result),
+      structured: {
+        matchScore:
+          result.matchScore || result.ats_analysis?.match_score_percent || 0,
+        matchProbability: result.matchProbability || "中",
+        keyRequirements:
+          result.keyRequirements || result.ats_analysis?.keywords_hit || [],
+        strengths:
+          result.strengths ||
+          result.ranking_analysis?.rank_boost_suggestions ||
+          [],
+        weaknesses:
+          result.weaknesses || result.ats_analysis?.missing_keywords || [],
+        possibleQuestions:
+          result.possibleQuestions ||
+          result.technical_analysis?.expected_tech_questions?.flatMap(
+            (q) => q.questions
+          ) ||
+          [],
+        improvementSuggestions:
+          result.improvementSuggestions ||
+          result.ats_analysis?.improvement_suggestions ||
+          [],
+        ats_analysis: result.ats_analysis || {},
+        ranking_analysis: result.ranking_analysis || {},
+        hr_analysis: result.hr_analysis || {},
+        technical_analysis: result.technical_analysis || {},
+      },
+    };
   } catch (error) {
     console.error("简历分析失败:", error);
     throw new Error("简历分析服务出现错误，请稍后再试");

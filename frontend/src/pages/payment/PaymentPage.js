@@ -51,6 +51,7 @@ export default function PaymentConfirmPage() {
       );
       window.location.href = res.data.url;
     } catch (e) {
+      console.error("支付失败:", e);
       alert("拉起支付失败：" + (e.response?.data?.message || e.message));
     } finally {
       setLoading(false);

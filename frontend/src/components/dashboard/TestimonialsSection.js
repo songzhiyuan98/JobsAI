@@ -1,32 +1,37 @@
 export default function TestimonialsSection() {
-  // ...直接复制你原来的HeroSection内容...
   const testimonials = [
     {
       id: 1,
       content:
-        "TalentSync帮我优化了简历，让我成功获得了梦想中的产品经理职位。AI生成的求职信非常专业，完美匹配了职位需求。",
-      author: "张明",
-      role: "产品经理 @ 腾讯",
-      avatar: "/placeholder.svg?height=40&width=40",
+        "During my job search, I needed to tailor my resume for different companies. TalentSync not only analyzed multiple target positions but also provided multi-perspective optimization suggestions: from ATS keyword matching to HR screening and technical evaluation, comprehensively enhancing my resume's competitiveness and helping me successfully enter candidate pools at multiple companies.",
+      author: "Alex Chen",
+      role: "Software Engineering Graduate",
+      avatar: "https://i.pravatar.cc/150?img=32",
       platform: "LinkedIn",
+      platformIcon:
+        "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg",
     },
     {
       id: 2,
       content:
-        "作为一名应届毕业生，我很担心自己的简历不够突出。TalentSync不仅帮我分析了简历的优缺点，还给出了具体的改进建议，让我在竞争激烈的市场中脱颖而出。",
-      author: "李婷",
-      role: "数据分析师 @ 阿里巴巴",
-      avatar: "/placeholder.svg?height=40&width=40",
-      platform: "Twitter",
+        "TalentSync's AI cover letter feature is incredibly powerful! It deeply analyzes target companies' tech stacks and business characteristics to generate highly customized cover letters. Each cover letter I submitted perfectly matched company requirements, increasing my interview success rate by nearly 3x and helping me secure offers from multiple desired companies.",
+      author: "David Wang",
+      role: "Computer Science Graduate",
+      avatar: "https://i.pravatar.cc/150?img=8",
+      platform: "GitHub",
+      platformIcon:
+        "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg",
     },
     {
       id: 3,
       content:
-        "我尝试了市面上很多简历工具，但TalentSync是唯一一个真正理解技术职位需求的。它生成的求职信精准抓住了我的技术优势，帮我获得了多个面试机会。",
-      author: "王强",
-      role: "高级开发工程师 @ 字节跳动",
-      avatar: "/placeholder.svg?height=40&width=40",
-      platform: "知乎",
+        "As a sophomore CS student, I've always wondered how far I am from job market requirements. TalentSync not only analyzed the gap between my resume and target positions but also provided specific learning recommendations, giving me a clearer direction for future development.",
+      author: "CodeMaster_Leo",
+      role: "Computer Science Sophomore",
+      avatar: "https://i.pravatar.cc/150?img=12",
+      platform: "小红书",
+      platformIcon:
+        "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/xiaohongshu.svg",
     },
   ];
 
@@ -34,9 +39,10 @@ export default function TestimonialsSection() {
     <section id="testimonials" className="w-full py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold mb-4">用户评价</h2>
+          <h2 className="text-3xl font-bold mb-4">User Testimonials</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            看看其他求职者如何使用TalentSync成功获得理想工作
+            See how other job seekers successfully landed their dream jobs with
+            TalentSync
           </p>
         </div>
 
@@ -44,23 +50,28 @@ export default function TestimonialsSection() {
           {testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className="bg-white border-none shadow-sm hover:shadow-md transition-shadow rounded-lg"
+              className="bg-white border-none shadow-sm hover:shadow-md transition-shadow rounded-lg flex flex-col"
             >
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-grow">
                 <div className="flex items-center mb-4">
-                  <div className="text-2xl mr-2">💬</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="flex items-center text-sm text-gray-500">
+                    <img
+                      src={testimonial.platformIcon}
+                      alt={testimonial.platform}
+                      className="w-4 h-4 mr-2"
+                    />
                     {testimonial.platform}
                   </div>
                 </div>
-                <p className="text-gray-700 mb-6 italic">
+                <p className="text-gray-700 mb-6 italic flex-grow">
                   "{testimonial.content}"
                 </p>
-                <div className="flex items-center">
+                <div className="flex items-center mt-auto">
                   <div className="h-10 w-10 rounded-full bg-gray-200 mr-3 overflow-hidden">
                     <img
-                      src={testimonial.avatar || "/placeholder.svg"}
+                      src={testimonial.avatar}
                       alt={testimonial.author}
+                      className="w-full h-full object-cover"
                     />
                   </div>
                   <div>

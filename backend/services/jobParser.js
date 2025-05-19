@@ -78,7 +78,8 @@ schema:
   "requirements": [],
   "preferred_qualifications": [],
   "tech_stack": [],
-  "benefits": []
+  "benefits": [],
+  "companyInfo": "" // 从JD中提取所有与公司相关的信息，包括但不限于：公司主营业务、产品/服务、技术方向、公司文化、发展现状、行业地位、最新动态等。将这些信息整理成一段连贯的描述。
 }
 
 原始JD文本：
@@ -141,6 +142,7 @@ ${cleanedJobText}
       preferred_qualifications: [],
       tech_stack: [],
       benefits: [],
+      companyInfo: "",
     };
   }
 }

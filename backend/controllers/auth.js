@@ -138,6 +138,7 @@ exports.googleCallback = async (req, res, next) => {
         user = await User.create({
           name,
           email,
+          subscriptionStatus: "free",
           authProviders: [
             {
               provider: "google",
@@ -163,6 +164,7 @@ exports.googleCallback = async (req, res, next) => {
     // 重定向到前端应用，带上令牌
     res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
   } catch (err) {
+    console.error("Google OAuth Error:", err);
     res.redirect(`${process.env.FRONTEND_URL}/login?error=google_auth_failed`);
   }
 };

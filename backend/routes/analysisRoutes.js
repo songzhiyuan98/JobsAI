@@ -9,9 +9,15 @@ const {
 const upload = require("../middleware/uploadMiddleware");
 const Gpt4oAnalysis = require("../models/gpt4oAnalysis");
 const Analysis = require("../models/analysis");
+const checkSubscription = require("../middleware/checkSubscription");
 
 // 创建分析
-router.post("/", protect, createAnalysis);
+router.post(
+  "/",
+  protect,
+  checkSubscription("gpt4oResumeAnalysis"),
+  createAnalysis
+);
 
 // 获取分析详情
 router.get("/:id", protect, getAnalysis);

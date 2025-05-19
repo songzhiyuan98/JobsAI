@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = process.env.REACT_APP_API_URL || "";
+const API_URL = process.env.REACT_APP_API_URL;
 
 // 设置请求头中的令牌
 const setAuthToken = (token) => {

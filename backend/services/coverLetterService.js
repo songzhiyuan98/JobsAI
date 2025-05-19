@@ -5,118 +5,145 @@ const {
 const PDFDocument = require("pdfkit");
 const OpenAI = require("openai");
 const axios = require("axios");
+const { robustAIRequest, extractJsonFromText } = require("./aiService");
 
 // OpenAI 客户端
 const openaiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// 健壮提取 Gemini 返回的 JSON
-function extractGeminiJson(text) {
-  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-  let content = codeBlockMatch ? codeBlockMatch[1] : text;
-  content = content.trim();
-  return JSON.parse(content);
-}
-
-// 健壮提取 AI 返回的 JSON（支持 markdown 代码块，gpt-4o 专用）
-function extractJsonFromText(text) {
-  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-  let content = codeBlockMatch ? codeBlockMatch[1] : text;
-  content = content.trim();
-  return JSON.parse(content);
-}
-
-// 生成求职信内容（完全照搬简历分析的结构）
+// 生成求职信内容
 exports.generateCoverLetter = async ({ job, resume, model }) => {
-  const jobStr = JSON.stringify(job, null, 2);
-  const resumeStr = JSON.stringify(resume, null, 2);
+  let prompt, parsed;
 
-  let prompt, aiResult, parsed;
+  console.log("[CoverLetterService] 请求模型:", model);
+  console.log(
+    "[CoverLetterService] 内容长度: 职位=",
+    JSON.stringify(job).length,
+    "简历=",
+    JSON.stringify(resume).length
+  );
 
-  console.log("[CoverLetterService] jobStr:", jobStr.slice(0, 100));
-  console.log("[CoverLetterService] resumeStr:", resumeStr.slice(0, 100));
+  try {
+    if (model === "gpt-4o") {
+      prompt = coverLetterGpt4oPrompt;
+      console.log("[CoverLetterService] 使用gpt4o prompt");
+      console.log("[CoverLetterService] gpt4o prompt长度:", prompt.length);
 
-  if (model === "gpt-4o") {
-    prompt = coverLetterGpt4oPrompt
-      .replace("{{jobStr}}", jobStr)
-      .replace("{{resumeStr}}", resumeStr);
-    console.log("[CoverLetterService] gpt4o prompt:", prompt.slice(0, 200));
-    try {
       const completion = await openaiClient.chat.completions.create({
         model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          {
+            role: "user",
+            content: prompt
+              .replace("{{job.title}}", job.title || "")
+              .replace("{{job.company}}", job.company || "")
+              .replace("{{job.location}}", job.location || "")
+              .replace("{{job.description}}", job.description || "")
+              .replace(
+                "{{job.requirements}}",
+                JSON.stringify(job.requirements || [])
+              )
+              .replace(
+                "{{job.preferred_qualifications}}",
+                JSON.stringify(job.preferred_qualifications || [])
+              )
+              .replace(
+                "{{job.tech_stack}}",
+                JSON.stringify(job.tech_stack || [])
+              )
+              .replace("{{job.companyInfo}}", job.companyInfo || "")
+              .replace(
+                "{{resume.basicInfo}}",
+                JSON.stringify(resume.basicInfo || {})
+              )
+              .replace(
+                "{{resume.education}}",
+                JSON.stringify(resume.education || [])
+              )
+              .replace(
+                "{{resume.experiences}}",
+                JSON.stringify(resume.experiences || [])
+              )
+              .replace(
+                "{{resume.projects}}",
+                JSON.stringify(resume.projects || [])
+              )
+              .replace(
+                "{{resume.skills}}",
+                JSON.stringify(resume.skills || [])
+              ),
+          },
+        ],
         temperature: 0.7,
       });
-      aiResult = completion.choices[0].message.content;
+
+      const aiResult = completion.choices[0].message.content;
       console.log(
-        "[CoverLetterService] gpt4o AI原始返回:",
-        aiResult.slice(0, 300)
+        "[CoverLetterService] gpt4o 请求成功，返回长度:",
+        aiResult.length
       );
       parsed = extractJsonFromText(aiResult);
-      console.log("[CoverLetterService] gpt4o 解析后:", parsed);
-    } catch (e) {
-      console.error("[CoverLetterService] gpt4o 解析异常:", e, aiResult);
-      throw new Error("GPT-4o 返回内容解析失败，请重试");
-    }
-  } else if (model.startsWith("gemini")) {
-    prompt = coverLetterGeminiPrompt
-      .replace("{{jobStr}}", jobStr)
-      .replace("{{resumeStr}}", resumeStr);
-    console.log("[CoverLetterService] gemini prompt:", prompt.slice(0, 200));
-    try {
-      const response = await axios.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-        {
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: prompt }],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 3500,
-          },
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": process.env.GEMINI_API_KEY,
-          },
-        }
-      );
-      let text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      console.log(
-        "[CoverLetterService] gemini AI原始返回:",
-        text.slice(0, 300)
-      );
-      // 健壮处理 markdown 代码块
-      const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-      if (codeBlockMatch) {
-        text = codeBlockMatch[1];
-      }
-      text = text.trim();
-      parsed = JSON.parse(text);
-      console.log("[CoverLetterService] gemini 解析后:", parsed);
-    } catch (e) {
-      console.error("[CoverLetterService] Gemini JSON解析失败:", e);
-      throw new Error("Gemini 返回内容解析失败，请重试");
-    }
-  } else {
-    throw new Error("不支持的模型类型");
-  }
+    } else if (model.startsWith("gemini")) {
+      prompt = coverLetterGeminiPrompt;
+      console.log("[CoverLetterService] 使用gemini prompt");
+      console.log("[CoverLetterService] gemini prompt长度:", prompt.length);
 
-  // 字段兜底
-  return {
-    recipient: parsed.recipient || "",
-    subject: parsed.subject || "",
-    paragraphs: parsed.paragraphs || [],
-    closing: parsed.closing || "",
-    signature: parsed.signature || "",
-    highlights: parsed.highlights || [],
-    suggestions: parsed.suggestions || [],
-  };
+      // 替换提示词中的变量
+      const formattedPrompt = prompt
+        .replace("{{job.title}}", job.title || "")
+        .replace("{{job.company}}", job.company || "")
+        .replace("{{job.location}}", job.location || "")
+        .replace("{{job.description}}", job.description || "")
+        .replace("{{job.requirements}}", JSON.stringify(job.requirements || []))
+        .replace(
+          "{{job.preferred_qualifications}}",
+          JSON.stringify(job.preferred_qualifications || [])
+        )
+        .replace("{{job.tech_stack}}", JSON.stringify(job.tech_stack || []))
+        .replace("{{job.companyInfo}}", job.companyInfo || "")
+        .replace("{{resume.basicInfo}}", JSON.stringify(resume.basicInfo || {}))
+        .replace("{{resume.education}}", JSON.stringify(resume.education || []))
+        .replace(
+          "{{resume.experiences}}",
+          JSON.stringify(resume.experiences || [])
+        )
+        .replace("{{resume.projects}}", JSON.stringify(resume.projects || []))
+        .replace("{{resume.skills}}", JSON.stringify(resume.skills || []));
+
+      console.log("[CoverLetterService] gemini prompt:", formattedPrompt);
+
+      // 使用增强版请求函数
+      const aiResponse = await robustAIRequest({
+        model,
+        prompt: formattedPrompt,
+        jobContent: JSON.stringify(job),
+        resumeContent: JSON.stringify(resume),
+        contentTypes: { job: "job", resume: "resume" },
+        maxRetries: 2,
+        contentReductionPercent: 30,
+      });
+
+      console.log("[CoverLetterService] gemini 请求成功");
+      parsed = aiResponse.json;
+    } else {
+      throw new Error("不支持的模型类型");
+    }
+
+    // 字段兜底
+    return {
+      recipient: parsed.recipient || "",
+      subject: parsed.subject || "",
+      paragraphs: parsed.paragraphs || [],
+      closing: parsed.closing || "",
+      signature: parsed.signature || "",
+      highlights: parsed.highlights || [],
+      suggestions: parsed.suggestions || [],
+    };
+  } catch (error) {
+    console.error("[CoverLetterService] 生成失败:", error);
+    throw new Error(`求职信生成失败: ${error.message}`);
+  }
 };
 
 // 生成 PDF 并 pipe 到 res（只保留正文）

@@ -5,8 +5,9 @@ const authRoutes = require("./routes/auth");
 const resumeRoutes = require("./routes/resumeRoutes");
 const interviewRoutes = require("./routes/interviewRoutes");
 const analysisRoutes = require("./routes/analysisRoutes");
-const { router: paymentRouter, handleWebhook } = require("./routes/payment");
+const paymentRouter = require("./routes/payment");
 const coverLetterRoutes = require("./routes/coverLetterRoutes");
+const subscriptionRoutes = require("./routes/subscription");
 require("dotenv").config();
 const cors = require("cors");
 const path = require("path");
@@ -30,7 +31,11 @@ app.use(
 app.post(
   "/api/payment/webhook",
   express.raw({ type: "application/json" }),
-  handleWebhook
+  (req, res, next) => {
+    console.log("收到 webhook 请求");
+    next();
+  },
+  paymentRouter
 );
 
 // 2. 其他中间件
@@ -47,6 +52,7 @@ app.use("/api/interviews", interviewRoutes);
 app.use("/api/analysis", analysisRoutes);
 app.use("/api/payment", paymentRouter);
 app.use("/api/cover-letters", coverLetterRoutes);
+app.use("/api/subscription", subscriptionRoutes);
 
 // 错误处理中间件
 app.use((err, req, res, next) => {

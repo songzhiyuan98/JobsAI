@@ -1,27 +1,37 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   User,
   FileText,
   BarChart2,
   Settings,
   ChevronRight,
+  Mail,
+  Briefcase,
 } from "lucide-react";
 import OverviewSection from "./personalcenter/OverviewSection";
 import ResumeSection from "./personalcenter/ResumeSection";
 import AnalysisSection from "./personalcenter/AnalysisSection";
-import ProfileSection from "./personalcenter/ProfileSection";
-
+import CoverLetterSection from "./personalcenter/CoverLetterSection";
+import AnalysisHistorySection from "./personalcenter/AnalysisHistorySection";
+import AccountSettingsSection from "./personalcenter/AccountSettingsSection";
 // 仪表板导航项
 const navItems = [
+  { id: "account-settings", label: "账户设置", icon: <Settings size={18} /> },
   { id: "overview", label: "个人中心", icon: <User size={18} /> },
   { id: "resumes", label: "简历管理", icon: <FileText size={18} /> },
-  { id: "analysis", label: "职位管理", icon: <BarChart2 size={18} /> },
-  { id: "profile", label: "个人设置", icon: <Settings size={18} /> },
+  { id: "analysis", label: "职位管理", icon: <Briefcase size={18} /> },
+  { id: "cover-letters", label: "求职信管理", icon: <Mail size={18} /> },
+  {
+    id: "analysis-history",
+    label: "历史分析报告",
+    icon: <BarChart2 size={18} />,
+  },
 ];
 
 export default function PersonalCenter() {
-  const [activePage, setActivePage] = useState("overview");
+  const [activePage, setActivePage] = useState("account-settings");
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -125,10 +135,12 @@ export default function PersonalCenter() {
           </div>
           {/* 主内容区域 */}
           <div className="flex-1 ml-4">
+            {activePage === "account-settings" && <AccountSettingsSection />}
             {activePage === "overview" && <OverviewSection />}
             {activePage === "resumes" && <ResumeSection />}
             {activePage === "analysis" && <AnalysisSection />}
-            {activePage === "profile" && <ProfileSection />}
+            {activePage === "cover-letters" && <CoverLetterSection />}
+            {activePage === "analysis-history" && <AnalysisHistorySection />}
           </div>
         </div>
       </div>

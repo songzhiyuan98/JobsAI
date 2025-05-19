@@ -1,43 +1,55 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  isPremium: false,
-  isEnterprise: false,
-  subscriptionEndDate: null,
-  subscriptionType: "free", // free, premium, enterprise
-  features: {
-    gpt3_5: false,
-    gpt4o: false,
-    claude: false,
+  subscriptionStatus: null,
+  dailyUsage: {
+    analysis: 0,
+    coverLetter: 0,
   },
+  lastUsageDate: null,
+  loading: false,
+  error: null,
 };
 
-export const userSlice = createSlice({
+const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    setPremiumStatus: (state, action) => {
-      state.isPremium = action.payload.isPremium;
-      state.isEnterprise = action.payload.isEnterprise;
-      state.subscriptionEndDate = action.payload.subscriptionEndDate;
-      state.subscriptionType = action.payload.subscriptionType;
-      state.features = action.payload.features;
-      localStorage.setItem("userState", JSON.stringify(state));
+    setSubscriptionStatus: (state, action) => {
+      state.subscriptionStatus = action.payload;
     },
-    clearPremiumStatus: (state) => {
-      state.isPremium = false;
-      state.isEnterprise = false;
-      state.subscriptionEndDate = null;
-      state.subscriptionType = "free";
-      state.features = {
-        gpt3_5: false,
-        gpt4o: false,
-        claude: false,
+    setDailyUsage: (state, action) => {
+      state.dailyUsage = action.payload;
+    },
+    setLastUsageDate: (state, action) => {
+      state.lastUsageDate = action.payload;
+    },
+    setLoading: (state, action) => {
+      state.loading = action.payload;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+    },
+    clearUserState: (state) => {
+      state.subscriptionStatus = null;
+      state.dailyUsage = {
+        analysis: 0,
+        coverLetter: 0,
       };
-      localStorage.removeItem("userState");
+      state.lastUsageDate = null;
+      state.loading = false;
+      state.error = null;
     },
   },
 });
 
-export const { setPremiumStatus, clearPremiumStatus } = userSlice.actions;
+export const {
+  setSubscriptionStatus,
+  setDailyUsage,
+  setLastUsageDate,
+  setLoading,
+  setError,
+  clearUserState,
+} = userSlice.actions;
+
 export default userSlice.reducer;

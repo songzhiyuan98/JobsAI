@@ -18,6 +18,7 @@ const userJobSchema = new mongoose.Schema(
     original_text: String, // 存储原始文本
     source_url: String,
     notes: String,
+    companyInfo: String, // 公司信息
     status: {
       type: String,
       enum: ["saved", "applied", "interviewing", "offered", "rejected"],

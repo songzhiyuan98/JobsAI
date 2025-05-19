@@ -178,3 +178,24 @@ JobsAI/
 ## 其他
 
 - 项目所有规则、接口、权限、风格等需在 README.md 和 projectrule.mdc 里同步更新，便于团队协作和 AI 辅助开发。
+
+首先安装 Stripe CLI：
+Mac: brew install stripe/stripe-cli/stripe
+Windows: 从 https://github.com/stripe/stripe-cli/releases/latest 下载
+Linux: 使用相应的包管理器安装
+登录 Stripe CLI：
+Apply to payment.js
+Run
+login
+启动 webhook 转发（在项目根目录下运行）：
+Apply to payment.js
+Run
+webhook
+运行后，CLI 会显示一个 webhook signing secret，类似这样：
+Apply to payment.js
+)
+把这个 secret 复制到你的 .env 文件中：
+Apply to payment.js
+.
+重启你的后端服务器
+这样，当你在本地测试支付时，Stripe CLI 会自动将 webhook 事件转发到你的本地服务器。

@@ -47,8 +47,6 @@ exports.uploadResume = async (req, res) => {
         fileUrl: fileUrl,
       },
       ...resumeData,
-      // 标记为需要验证
-      isVerified: false,
     });
 
     await newResume.save();
@@ -69,7 +67,7 @@ exports.uploadResume = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "简历上传并解析成功",
+      message: "简历上传成功",
       data: newResume,
     });
   } catch (error) {
@@ -107,6 +105,7 @@ exports.getActiveResume = async (req, res) => {
     const userId = req.user.id;
 
     const user = await User.findById(userId);
+
     if (!user.activeResume) {
       return res.status(404).json({
         success: false,
@@ -115,6 +114,7 @@ exports.getActiveResume = async (req, res) => {
     }
 
     const resume = await Resume.findById(user.activeResume);
+
     if (!resume) {
       // 如果指向的简历不存在，清除无效引用
       user.activeResume = null;
@@ -131,7 +131,6 @@ exports.getActiveResume = async (req, res) => {
       data: resume,
     });
   } catch (error) {
-    console.error("获取激活简历错误:", error);
     res.status(500).json({
       success: false,
       message: "服务器错误，无法获取激活的简历",
@@ -220,58 +219,6 @@ exports.setResumeActive = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "服务器错误，无法设置激活简历",
-    });
-  }
-};
-
-// 验证并更新简历数据
-exports.verifyResume = async (req, res) => {
-  try {
-    const resumeId = req.params.id;
-    const userId = req.user.id;
-    const updatedData = req.body;
-
-    // 确保用户只能更新自己的简历
-    const resume = await Resume.findOne({
-      _id: resumeId,
-      user: userId,
-    });
-
-    if (!resume) {
-      return res.status(404).json({
-        success: false,
-        message: "简历未找到或无权限修改",
-      });
-    }
-
-    // 更新简历数据并标记为已验证
-    const updateFields = {
-      basicInfo: updatedData.basicInfo,
-      education: updatedData.education,
-      experience: updatedData.experience,
-      projects: updatedData.projects,
-      skills: updatedData.skills,
-      honors: updatedData.honors,
-      isVerified: true,
-      updatedAt: Date.now(),
-    };
-
-    const updatedResume = await Resume.findByIdAndUpdate(
-      resumeId,
-      updateFields,
-      { new: true }
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "简历信息已更新并验证",
-      data: updatedResume,
-    });
-  } catch (error) {
-    console.error("验证简历错误:", error);
-    res.status(500).json({
-      success: false,
-      message: "服务器错误，无法更新简历",
     });
   }
 };

@@ -207,14 +207,19 @@ const JobManagerPage = () => {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl">
-      <div className="flex justify-between items-center mb-5">
-        <h1 className="text-xl font-medium text-gray-900 dark:text-white">
-          职位管理
-        </h1>
+    <div className="max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        <div className="flex flex-col items-start">
+          <h1 className="text-xl font-medium text-gray-900 dark:text-white">
+            职位管理
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            管理您保存的职位信息
+          </p>
+        </div>
         <button
           onClick={() => navigate("/jobs/new")}
-          className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-sm flex items-center"
+          className="mt-4 sm:mt-0 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-sm flex items-center"
         >
           <FiPlus className="mr-2" /> 添加职位
         </button>

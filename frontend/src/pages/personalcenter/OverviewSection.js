@@ -9,7 +9,11 @@ import {
   FiFileText,
   FiBarChart2,
   FiCalendar,
+  FiAlertTriangle,
+  FiLoader,
 } from "react-icons/fi";
+
+const API_URL = process.env.REACT_APP_API_URL;
 
 const OverviewSection = () => {
   const [resumeData, setResumeData] = useState(null);
@@ -24,7 +28,7 @@ const OverviewSection = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await axios.get("/api/resumes/active", {
+      const response = await axios.get(`${API_URL}/api/resumes/active`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setResumeData(response.data.data);
@@ -38,17 +42,44 @@ const OverviewSection = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[200px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+      <div className="min-h-[50vh] flex justify-center items-center p-8">
+        <div className="text-center">
+          <FiLoader className="animate-spin text-indigo-600 h-8 w-8 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-300">
+            正在加载您的个人信息...
+          </p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/40 text-red-800 dark:text-red-300">
-        <div className="flex">
-          <span className="text-sm">{error}</span>
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col items-center justify-center rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm p-8 text-center">
+          <div className="bg-gray-100 dark:bg-gray-700 rounded-full p-5 mb-3">
+            <FiAlertTriangle className="h-8 w-8 text-gray-600 dark:text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            未找到激活的简历
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mb-4">
+            请先验证并激活一份简历，以启用个人信息显示功能
+          </p>
+          <div className="space-x-4">
+            <a
+              href="/resume"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+            >
+              去验证简历
+            </a>
+            <a
+              href="/resume/upload"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+            >
+              上传新简历
+            </a>
+          </div>
         </div>
       </div>
     );
@@ -56,25 +87,18 @@ const OverviewSection = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        {/* 简历信息卡片 */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-              <FiFileText className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-            </div>
-            <div>
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                个人资料
-              </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                资料来源于简历分析，请及时更新
-              </p>
-            </div>
-          </div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        <div className="flex flex-col items-start">
+          <h1 className="text-xl font-medium text-gray-900 dark:text-white">
+            个人资料
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            资料来源于简历分析，请及时更新
+          </p>
         </div>
+      </div>
 
-        {/* 详细信息 */}
+      <div className="rounded-lg overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 基本信息 */}

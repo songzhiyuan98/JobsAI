@@ -20,7 +20,7 @@ import {
 } from "react-icons/fi";
 import axios from "axios";
 
-const ResumeVerifier = ({ resumeId, onVerified, onCancel }) => {
+const ResumeVerifier = ({ resumeId, onClose, onSuccess }) => {
   const [resume, setResume] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -107,28 +107,19 @@ const ResumeVerifier = ({ resumeId, onVerified, onCancel }) => {
     }
   };
 
-  // 保存并验证简历 - 修改验证逻辑，点击确认即验证
-  const saveAndVerify = async () => {
+  // 保存简历
+  const saveResume = async () => {
     try {
       setSaving(true);
       const token = localStorage.getItem("token");
 
-      // 先保存更新
+      // 保存更新
       await axios.put(`/api/resumes/${resumeId}`, resume, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // 标记为已验证，不再检查是否有修改
-      await axios.put(
-        `/api/resumes/${resumeId}/verify`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
       setSaving(false);
-      onVerified && onVerified(resume);
+      onSuccess && onSuccess(resume);
     } catch (err) {
       setSaving(false);
       setError("保存简历失败");
@@ -184,17 +175,17 @@ const ResumeVerifier = ({ resumeId, onVerified, onCancel }) => {
     <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-lg shadow-md rounded-lg overflow-hidden max-w-4xl mx-auto border border-gray-200/50 dark:border-gray-700/50">
       <div className="p-6 border-b border-gray-200/70 dark:border-gray-700/70 flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center">
-          <FiFileText className="mr-2" /> 验证简历: {resume.name}
+          <FiFileText className="mr-2" /> 编辑简历: {resume.name}
         </h2>
         <div className="space-x-2">
           <button
-            onClick={onCancel}
+            onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200/70 dark:bg-gray-700/70 rounded-md hover:bg-gray-300/70 dark:hover:bg-gray-600/70 transition-colors"
           >
-            <FiX className="inline-block mr-1" /> 取消
+            <FiX className="inline-block mr-1" /> 返回
           </button>
           <button
-            onClick={saveAndVerify}
+            onClick={saveResume}
             disabled={saving}
             className={`px-4 py-2 text-white bg-indigo-600/90 dark:bg-indigo-600/80 rounded-md hover:bg-indigo-700/90 dark:hover:bg-indigo-700/80 transition-colors ${
               saving ? "opacity-50 cursor-not-allowed" : ""
@@ -207,7 +198,7 @@ const ResumeVerifier = ({ resumeId, onVerified, onCancel }) => {
               </>
             ) : (
               <>
-                <FiCheck className="inline-block mr-1" /> 确认验证
+                <FiSave className="inline-block mr-1" /> 保存
               </>
             )}
           </button>

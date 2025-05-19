@@ -2,72 +2,96 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const UserSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "请提供姓名"],
-    trim: true,
-    maxlength: [50, "姓名不能超过50个字符"],
-  },
-  email: {
-    type: String,
-    required: [true, "请提供邮箱"],
-    unique: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      "请提供有效的邮箱地址",
-    ],
-  },
-  password: {
-    type: String,
-    minlength: [6, "密码至少需要6个字符"],
-    select: false,
-  },
-  authProviders: [
-    {
-      provider: {
-        type: String,
-        enum: ["google", "local"],
-        required: true,
-      },
-      providerId: {
-        type: String,
-        required: true,
-      },
-      accessToken: {
-        type: String,
-        select: false,
-      },
-      lastLogin: {
-        type: Date,
-        default: Date.now,
-      },
+const UserSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "请提供姓名"],
+      trim: true,
+      maxlength: [50, "姓名不能超过50个字符"],
     },
-  ],
-  googleProfile: {
-    picture: String,
-    given_name: String,
-    family_name: String,
-  },
-  profileCompleted: {
-    type: Boolean,
-    default: false,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  resumes: [
-    {
+    email: {
+      type: String,
+      required: [true, "请提供邮箱"],
+      unique: true,
+      match: [
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+        "请提供有效的邮箱",
+      ],
+    },
+    password: {
+      type: String,
+      required: function () {
+        // 只有在没有 Google 认证提供者时才需要密码
+        return (
+          !this.authProviders ||
+          !this.authProviders.some((p) => p.provider === "google")
+        );
+      },
+      minlength: [6, "密码至少需要6个字符"],
+      select: false,
+    },
+    subscriptionStatus: {
+      type: String,
+      enum: ["free", "premium", "enterprise"],
+      default: "free",
+    },
+    activeSubscription: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subscription",
+      default: null,
+    },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
+    authProviders: [
+      {
+        provider: {
+          type: String,
+          enum: ["google", "local"],
+          required: true,
+        },
+        providerId: {
+          type: String,
+          required: true,
+        },
+        accessToken: {
+          type: String,
+          select: false,
+        },
+        lastLogin: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    googleProfile: {
+      picture: String,
+      given_name: String,
+      family_name: String,
+    },
+    profileCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    resumes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Resume",
+      },
+    ],
+    activeResume: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Resume",
     },
-  ],
-  activeResume: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Resume",
   },
-});
+  {
+    timestamps: true,
+  }
+);
 
 // 加密密码
 UserSchema.pre("save", async function (next) {

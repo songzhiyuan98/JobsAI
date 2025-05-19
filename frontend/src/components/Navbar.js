@@ -8,11 +8,12 @@ import { FiUser, FiLogIn, FiZap } from "react-icons/fi";
 import authService from "../services/authService";
 import { Menu, X } from "lucide-react";
 import axios from "axios";
-import { clearPremiumStatus } from "../store/userSlice";
+import { logout } from "../store/userActions";
+import { setSubscriptionStatus } from "../store/userSlice";
 
 const Navbar = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const { subscriptionType } = useSelector((state) => state.user);
+  const { subscriptionStatus } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
@@ -40,40 +41,46 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchUserData();
-    } else {
-      setUserData(null);
-    }
-  }, [isAuthenticated]);
+    const fetchUserData = async () => {
+      if (isAuthenticated) {
+        try {
+          setLoading(true);
+          const token = localStorage.getItem("token");
+          const response = await axios.get("/api/auth/me", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setUserData(response.data.data);
+          // 更新会员状态
+          if (response.data.data.subscriptionStatus) {
+            dispatch(
+              setSubscriptionStatus(response.data.data.subscriptionStatus)
+            );
+          }
+        } catch (err) {
+          setError("获取用户信息失败");
+          console.error("获取用户信息错误:", err);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setUserData(null);
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [isAuthenticated, dispatch]);
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
-  const fetchUserData = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      const response = await axios.get("/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUserData(response.data.data);
-    } catch (err) {
-      setError("获取用户信息失败");
-      console.error("获取用户信息错误:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleLogout = () => {
-    dispatch(clearPremiumStatus());
-    dispatch(authLogout());
+    dispatch(logout());
     setUserData(null);
     localStorage.removeItem("token");
     localStorage.removeItem("userState");
-    localStorage.removeItem("user"); // 这一行也加上，彻底清空
+    localStorage.removeItem("user");
     navigate("/login");
   };
 
@@ -93,7 +100,7 @@ const Navbar = () => {
 
   const getSubscriptionBadge = () => {
     if (!isAuthenticated) return null;
-    switch (subscriptionType) {
+    switch (subscriptionStatus) {
       case "premium":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
@@ -114,6 +121,54 @@ const Navbar = () => {
         );
     }
   };
+
+  // 如果正在加载，显示一个占位符
+  if (loading) {
+    return (
+      <nav className="w-full bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link to="/" className="flex-shrink-0 flex items-center">
+                <span className="text-xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent ml-4">
+                  TalentSync
+                </span>
+              </Link>
+              <div className="hidden md:ml-10 md:flex md:space-x-8">
+                <button
+                  onClick={() => handleNavToSection("features")}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-bold bg-transparent"
+                >
+                  Features
+                </button>
+                <button
+                  onClick={() => handleNavToSection("pricing")}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-bold bg-transparent"
+                >
+                  Pricing
+                </button>
+                <button
+                  onClick={() => handleNavToSection("testimonials")}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-bold bg-transparent"
+                >
+                  Testimonials
+                </button>
+                <button
+                  onClick={() => handleNavToSection("about")}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-bold bg-transparent"
+                >
+                  About
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="w-full bg-white border-b border-gray-100 sticky top-0 z-50">

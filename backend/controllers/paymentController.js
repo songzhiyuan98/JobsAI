@@ -1,5 +1,6 @@
 const Subscription = require("../models/Subscription");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const User = require("../models/User");
 
 // 创建支付会话
 const createCheckoutSession = async (req, res) => {
@@ -44,6 +45,12 @@ const createCheckoutSession = async (req, res) => {
         userId,
         subscriptionType,
       },
+      subscription_data: {
+        metadata: {
+          userId,
+          subscriptionType,
+        },
+      },
     });
 
     res.json({ url: session.url });
@@ -56,6 +63,8 @@ const createCheckoutSession = async (req, res) => {
 // 处理支付成功webhook
 const handleWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
+  console.log("收到 webhook 请求，签名:", sig);
+  console.log("Webhook Secret:", process.env.STRIPE_WEBHOOK_SECRET);
   let event;
 
   try {
@@ -64,71 +73,76 @@ const handleWebhook = async (req, res) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-    console.log("收到 webhook:", event.type, event.data.object);
+    console.log("Webhook 事件类型:", event.type);
+    console.log(
+      "Webhook 事件数据:",
+      JSON.stringify(event.data.object, null, 2)
+    );
   } catch (err) {
     console.error("Webhook 签名校验失败:", err.message);
+    console.error("错误详情:", err);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  // 处理结账会话完成事件
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const userId = session.metadata.userId;
     const subscriptionType = session.metadata.subscriptionType;
+    const subscriptionId = session.subscription;
+
     console.log(
-      "checkout.session.completed, userId:",
+      "处理支付成功，用户ID:",
       userId,
-      "subscriptionType:",
-      subscriptionType
+      "订阅类型:",
+      subscriptionType,
+      "订阅ID:",
+      subscriptionId
     );
 
-    // 1. 先取消所有 active 订阅（不管类型）
-    await Subscription.updateMany(
-      { userId, status: "active" },
-      { $set: { status: "cancelled", endDate: new Date() } }
-    );
-
-    // 2. 再插入新订阅
-    if (session.subscription) {
-      const stripeSub = await stripe.subscriptions.retrieve(
-        session.subscription
+    try {
+      // 1. 先取消所有 active 订阅（不管类型）
+      const updateResult = await Subscription.updateMany(
+        { userId, status: "active" },
+        { $set: { status: "cancelled", endDate: new Date() } }
       );
-      console.log("session.subscription:", session.subscription);
-      await Subscription.create({
-        userId,
-        subscriptionType,
-        status: "active",
-        startDate: new Date(),
-        endDate:
-          stripeSub && stripeSub.current_period_end
-            ? new Date(stripeSub.current_period_end * 1000)
-            : new Date(),
-        paymentId: session.subscription || session.id,
-        features: {
-          gpt3_5:
-            subscriptionType === "premium" || subscriptionType === "enterprise",
-          gpt4o: subscriptionType === "enterprise",
-          claude: subscriptionType === "enterprise",
-        },
-      });
-    } else {
-      // fallback，防止崩溃
-      await Subscription.create({
-        userId,
-        subscriptionType,
-        status: "active",
-        startDate: new Date(),
-        endDate: new Date(),
-        paymentId: session.id,
-        features: {
-          gpt3_5:
-            subscriptionType === "premium" || subscriptionType === "enterprise",
-          gpt4o: subscriptionType === "enterprise",
-          claude: subscriptionType === "enterprise",
-        },
-      });
-    }
+      console.log("取消旧订阅结果:", updateResult);
 
-    // 3. 你可以加日志或其他后续处理
+      // 2. 创建新订阅
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + 1); // 默认一个月
+      console.log("订阅结束时间:", endDate);
+
+      const newSubscription = await Subscription.create({
+        userId,
+        subscriptionType,
+        status: "active",
+        startDate: new Date(),
+        endDate: endDate,
+        paymentId: subscriptionId,
+        features: {
+          gpt3_5:
+            subscriptionType === "premium" || subscriptionType === "enterprise",
+          gpt4o: subscriptionType === "enterprise",
+          claude: subscriptionType === "enterprise",
+        },
+      });
+      console.log("创建新订阅成功:", newSubscription._id);
+
+      // 3. 更新用户状态和订阅ID
+      const user = await User.findById(userId);
+      if (user) {
+        user.subscriptionStatus = subscriptionType;
+        user.activeSubscription = newSubscription._id;
+        await user.save();
+        console.log("更新用户订阅状态成功:", user.subscriptionStatus);
+      } else {
+        console.error("未找到用户:", userId);
+      }
+    } catch (error) {
+      console.error("处理订阅时出错:", error);
+      console.error("错误堆栈:", error.stack);
+    }
   }
 
   res.json({ received: true });
@@ -169,6 +183,12 @@ const cancelStripeSubscription = async (req, res) => {
     sub.status = "cancelled";
     sub.endDate = new Date();
     await sub.save();
+
+    // 更新用户表中的订阅状态和订阅ID
+    await User.findByIdAndUpdate(userId, {
+      subscriptionStatus: "free",
+      activeSubscription: null,
+    });
 
     res.json({ success: true, message: "订阅已取消，将在本周期结束后失效" });
   } catch (error) {

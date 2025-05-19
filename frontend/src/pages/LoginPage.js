@@ -6,7 +6,7 @@ import { authRequest, authSuccess, authFail } from "../store/authSlice";
 import authService from "../services/authService";
 import logo from "../assets/logo.svg";
 import { FcGoogle } from "react-icons/fc";
-import { setPremiumStatus } from "../store/userSlice";
+import { setSubscriptionStatus } from "../store/userSlice";
 import axios from "axios";
 
 const LoginPage = () => {
@@ -27,11 +27,8 @@ const LoginPage = () => {
       const data = await authService.login(email, password);
       dispatch(authSuccess({ user: data.user, token: data.token }));
       localStorage.setItem("token", data.token);
-      const res = await axios.get("/api/payment/get-subscription-status", {
-        headers: { Authorization: `Bearer ${data.token}` },
-      });
-      dispatch(setPremiumStatus(res.data));
-      localStorage.setItem("userState", JSON.stringify(res.data));
+      dispatch(setSubscriptionStatus("free"));
+      localStorage.setItem("userState", JSON.stringify(data.user));
       navigate("/");
     } catch (err) {
       const errorMessage =

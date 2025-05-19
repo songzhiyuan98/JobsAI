@@ -12,11 +12,12 @@ import {
   FiAlertTriangle,
   FiClock,
   FiStar,
+  FiX,
 } from "react-icons/fi";
 import axios from "axios";
 import ResumeUploader from "./ResumeUploader";
-import ResumeVerifier from "./ResumeVerifier";
 import ResumePreview from "./ResumePreview";
+import ResumeVerifier from "./ResumeVerifier";
 
 const ResumeManager = ({ onClose, onResumeChange }) => {
   const [resumes, setResumes] = useState([]);
@@ -24,9 +25,9 @@ const ResumeManager = ({ onClose, onResumeChange }) => {
   const [error, setError] = useState(null);
   const [showUploader, setShowUploader] = useState(false);
   const [activeResumeId, setActiveResumeId] = useState(null);
-  const [editingResumeId, setEditingResumeId] = useState(null);
   const [downloadLoading, setDownloadLoading] = useState(null);
   const [previewResumeId, setPreviewResumeId] = useState(null);
+  const [editingResumeId, setEditingResumeId] = useState(null);
 
   useEffect(() => {
     fetchResumes();
@@ -57,54 +58,14 @@ const ResumeManager = ({ onClose, onResumeChange }) => {
 
   const handleResumeUploadSuccess = (resume) => {
     setShowUploader(false);
-
-    if (!resume.isVerified) {
-      setEditingResumeId(resume._id);
-    } else {
-      if (resumes.length === 0) {
-        setActiveResumeId(resume._id);
-        setResumeAsActive(resume._id);
-      }
-
-      setResumes([...resumes, resume]);
+    if (resumes.length === 0) {
+      setActiveResumeId(resume._id);
+      setResumeAsActive(resume._id);
     }
-  };
-
-  const handleEditComplete = (verifiedResume) => {
-    setEditingResumeId(null);
-
-    const updatedResumes = resumes.map((r) =>
-      r._id === verifiedResume._id ? verifiedResume : r
-    );
-
-    if (!activeResumeId) {
-      setActiveResumeId(verifiedResume._id);
-      setResumeAsActive(verifiedResume._id);
-    }
-
-    setResumes(
-      updatedResumes.includes(verifiedResume)
-        ? updatedResumes
-        : [...updatedResumes, verifiedResume]
-    );
+    setResumes([...resumes, resume]);
   };
 
   const setResumeAsActive = async (resumeId) => {
-    const resumeToActivate = resumes.find((r) => r._id === resumeId);
-
-    if (resumeToActivate && !resumeToActivate.isVerified) {
-      if (
-        window.confirm(
-          "该简历尚未验证，需要先验证后才能设为当前简历。是否立即验证？"
-        )
-      ) {
-        setEditingResumeId(resumeId);
-        return;
-      } else {
-        return;
-      }
-    }
-
     try {
       const token = localStorage.getItem("token");
       await axios.put(
@@ -145,7 +106,7 @@ const ResumeManager = ({ onClose, onResumeChange }) => {
         setResumes(updatedResumes);
 
         if (resumeId === activeResumeId) {
-          const newActiveResume = updatedResumes.find((r) => r.isVerified);
+          const newActiveResume = updatedResumes[0];
           if (newActiveResume) {
             setActiveResumeId(newActiveResume._id);
             setResumeAsActive(newActiveResume._id);
@@ -158,10 +119,6 @@ const ResumeManager = ({ onClose, onResumeChange }) => {
         console.error("删除简历错误:", err);
       }
     }
-  };
-
-  const editResume = (resumeId) => {
-    setEditingResumeId(resumeId);
   };
 
   const downloadResume = async (resumeId) => {
@@ -213,20 +170,6 @@ const ResumeManager = ({ onClose, onResumeChange }) => {
       <ResumePreview
         resumeId={previewResumeId}
         onClose={() => setPreviewResumeId(null)}
-        onEdit={() => {
-          setEditingResumeId(previewResumeId);
-          setPreviewResumeId(null);
-        }}
-      />
-    );
-  }
-
-  if (editingResumeId) {
-    return (
-      <ResumeVerifier
-        resumeId={editingResumeId}
-        onVerified={handleEditComplete}
-        onCancel={() => setEditingResumeId(null)}
       />
     );
   }
@@ -236,6 +179,19 @@ const ResumeManager = ({ onClose, onResumeChange }) => {
       <ResumeUploader
         onSuccess={handleResumeUploadSuccess}
         onCancel={() => setShowUploader(false)}
+      />
+    );
+  }
+
+  if (editingResumeId) {
+    return (
+      <ResumeVerifier
+        resumeId={editingResumeId}
+        onClose={() => setEditingResumeId(null)}
+        onSuccess={() => {
+          setEditingResumeId(null);
+          fetchResumes();
+        }}
       />
     );
   }
@@ -317,14 +273,9 @@ const ResumeManager = ({ onClose, onResumeChange }) => {
                           <h3 className="text-base font-medium text-gray-900 dark:text-white truncate mr-2">
                             {resume.name}
                           </h3>
-                          {resume.isVerified ? (
+                          {resume.isActive && (
                             <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                              <FiCheck className="mr-0.5 h-3 w-3" /> 已验证
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
-                              <FiAlertTriangle className="mr-0.5 h-3 w-3" />{" "}
-                              待验证
+                              <FiCheck className="mr-0.5 h-3 w-3" /> 当前使用
                             </span>
                           )}
                         </div>
@@ -351,19 +302,19 @@ const ResumeManager = ({ onClose, onResumeChange }) => {
 
                       <div className="flex items-center space-x-1.5">
                         <button
+                          onClick={() => setEditingResumeId(resume._id)}
+                          className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                          title="编辑简历"
+                        >
+                          <FiEdit className="h-4 w-4" />
+                        </button>
+
+                        <button
                           onClick={() => previewResume(resume._id)}
                           className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                           title="预览简历"
                         >
                           <FiEye className="h-4 w-4" />
-                        </button>
-
-                        <button
-                          onClick={() => editResume(resume._id)}
-                          className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                          title="编辑简历"
-                        >
-                          <FiEdit className="h-4 w-4" />
                         </button>
 
                         <button
