@@ -16,12 +16,12 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // 配置 CORS
-app.use(cors());
-
-// 或者更详细的配置
 app.use(
   cors({
-    origin: "http://localhost:3000", // 前端地址
+    origin: [
+      "http://localhost:3000",
+      process.env.FRONTEND_URL, // 使用环境变量
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
