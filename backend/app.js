@@ -18,10 +18,7 @@ const PORT = process.env.PORT || 3001;
 // 配置 CORS
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      process.env.FRONTEND_URL, // 使用环境变量
-    ],
+    origin: "*", // 允许所有来源
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
