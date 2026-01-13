@@ -18,6 +18,12 @@ import { useSelector, useDispatch } from "react-redux";
 import { Tooltip } from "react-tooltip";
 import { checkFeaturePermission } from "../../store/userActions";
 
+// ============================================================
+// 临时禁用订阅限制 - 测试运营版
+// 要恢复订阅限制，将此值改为 false
+// ============================================================
+const DISABLE_SUBSCRIPTION_CHECK = true;
+
 // 简历选择对话框组件
 const ResumeSelectDialog = ({ onSelect, resumeList }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -484,6 +490,9 @@ export default function UploadSection() {
 
   // 检查模型是否可用
   const isModelAvailable = (model) => {
+    // 测试运营版：所有模型对所有用户开放
+    if (DISABLE_SUBSCRIPTION_CHECK) return true;
+
     if (model === "gemini-2.0-flash") return true;
     if (model === "gpt-o1") return subscriptionStatus === "enterprise";
     if (model === "gpt-4o") {
@@ -502,6 +511,14 @@ export default function UploadSection() {
 
   // 获取模型提示信息
   const getModelTooltip = (model) => {
+    // 测试运营版：显示免费开放提示
+    if (DISABLE_SUBSCRIPTION_CHECK) {
+      if (model === "gpt-4o" || model === "gpt-o1") {
+        return "测试运营版：免费开放使用";
+      }
+      return "";
+    }
+
     if (model === "gpt-4o") {
       if (
         subscriptionStatus === "premium" ||

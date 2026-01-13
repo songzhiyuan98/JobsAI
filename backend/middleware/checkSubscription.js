@@ -1,9 +1,20 @@
 const Subscription = require("../models/Subscription");
 const User = require("../models/User");
 
+// ============================================================
+// 临时禁用付费限制 - 所有功能对所有用户开放
+// 要恢复付费功能，将此值改为 false
+// ============================================================
+const DISABLE_SUBSCRIPTION_CHECK = true;
+
 const checkSubscription = (action) => {
   return async (req, res, next) => {
     try {
+      // 如果禁用订阅检查，直接放行所有请求
+      if (DISABLE_SUBSCRIPTION_CHECK) {
+        return next();
+      }
+
       const userId = req.user.id;
 
       // 先获取用户信息

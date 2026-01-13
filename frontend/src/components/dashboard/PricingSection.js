@@ -5,11 +5,18 @@ import { useState } from "react";
 import axios from "axios";
 import { setSubscriptionStatus } from "../../store/userSlice";
 
+// ============================================================
+// 临时禁用支付功能 - 测试运营版
+// 要恢复支付功能，将此值改为 false
+// ============================================================
+const DISABLE_PAYMENT = true;
+
 // Pricing Section Component
 export default function PricingSection() {
   const navigate = useNavigate();
   const { subscriptionStatus } = useSelector((state) => state.user);
   const [showCancel, setShowCancel] = useState(false);
+  const [showPaymentDisabled, setShowPaymentDisabled] = useState(false);
   const dispatch = useDispatch();
 
   const handleCancel = async () => {
@@ -144,7 +151,11 @@ export default function PricingSection() {
                   : subscriptionStatus === "enterprise"
                   ? undefined
                   : () => {
-                      navigate("/payment?plan=premium");
+                      if (DISABLE_PAYMENT) {
+                        setShowPaymentDisabled(true);
+                      } else {
+                        navigate("/payment?plan=premium");
+                      }
                     }
               }
               disabled={subscriptionStatus === "enterprise"}
@@ -220,7 +231,11 @@ export default function PricingSection() {
                 subscriptionStatus === "enterprise"
                   ? () => setShowCancel(true)
                   : () => {
-                      navigate("/payment?plan=enterprise");
+                      if (DISABLE_PAYMENT) {
+                        setShowPaymentDisabled(true);
+                      } else {
+                        navigate("/payment?plan=enterprise");
+                      }
                     }
               }
               disabled={false}
@@ -281,6 +296,59 @@ export default function PricingSection() {
                   关闭
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 支付功能暂时禁用弹窗 */}
+      {showPaymentDisabled && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl px-8 py-7 w-full max-w-md border border-gray-100">
+            <div className="flex flex-col items-center">
+              <div className="mb-4 flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full">
+                <svg
+                  className="w-8 h-8 text-orange-500"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v2m0 4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z"
+                  />
+                </svg>
+              </div>
+              <span className="text-xl font-semibold text-black mb-3">
+                支付功能暂未开放
+              </span>
+              <div className="mb-6 text-gray-600 text-center leading-relaxed">
+                <p className="mb-3">
+                  Stripe 支付功能暂时禁用。
+                </p>
+                <p className="mb-3">
+                  当前为 <span className="font-semibold text-orange-500">测试运营版</span>，
+                  <span className="font-semibold">所有功能免费开放</span>给所有用户测试体验！
+                </p>
+                <p className="text-sm text-gray-500">
+                  欢迎反馈问题和建议到：
+                  <br />
+                  <a
+                    href="mailto:songzhiyuan98@gmail.com"
+                    className="text-blue-500 hover:underline font-medium"
+                  >
+                    songzhiyuan98@gmail.com
+                  </a>
+                </p>
+              </div>
+              <button
+                onClick={() => setShowPaymentDisabled(false)}
+                className="w-full bg-black text-white font-medium py-2.5 rounded-lg shadow hover:bg-gray-900 transition"
+              >
+                我知道了
+              </button>
             </div>
           </div>
         </div>
