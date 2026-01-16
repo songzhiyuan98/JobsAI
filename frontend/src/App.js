@@ -7,7 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthCallback from "./pages/AuthCallback";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { authRequest, authSuccess, authFail } from "./store/authSlice";
 import authService from "./services/authService";
 import JobManagerPage from "./pages/JobManagerPage";

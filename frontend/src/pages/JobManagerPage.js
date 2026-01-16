@@ -8,13 +8,9 @@ import {
   FiPlus,
   FiChevronRight,
   FiChevronDown,
-  FiExternalLink,
   FiLoader,
   FiX,
   FiAlertCircle,
-  FiMapPin,
-  FiDollarSign,
-  FiCalendar,
   FiArrowLeft,
   FiInfo,
   FiTrash2,
@@ -147,21 +143,6 @@ const JobManagerPage = () => {
     }
   };
 
-  // 格式化日期
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  // 获取状态样式
-  const getStatusStyle = (status) => {
-    const option = statusOptions.find((opt) => opt.value === status);
-    return option ? option.color : "bg-gray-100 text-gray-800";
-  };
 
   // 添加新函数 - 查看报告
   const viewJobReports = (job) => {

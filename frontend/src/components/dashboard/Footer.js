@@ -20,13 +20,13 @@ export default function Footer() {
               是您的智能求职助手，通过AI技术帮助您优化简历、生成求职信，提高求职成功率。我们的使命是让人才与岗位实现"同步匹配"。
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-gray-600">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600">
                 <Github className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-gray-600">
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600">
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-gray-600">
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600">
                 <Linkedin className="h-5 w-5" />
               </a>
             </div>
@@ -36,22 +36,22 @@ export default function Footer() {
             <h4 className="font-medium mb-4">产品</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-gray-600 hover:text-gray-900">
+                <a href="/#features" className="text-gray-600 hover:text-gray-900">
                   简历分析
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-600 hover:text-gray-900">
+                <a href="/#features" className="text-gray-600 hover:text-gray-900">
                   求职信生成
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-600 hover:text-gray-900">
+                <a href="/#features" className="text-gray-600 hover:text-gray-900">
                   职业规划
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-600 hover:text-gray-900">
+                <a href="/#features" className="text-gray-600 hover:text-gray-900">
                   面试准备
                 </a>
               </li>
@@ -62,22 +62,22 @@ export default function Footer() {
             <h4 className="font-medium mb-4">公司</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-gray-600 hover:text-gray-900">
+                <a href="/#about" className="text-gray-600 hover:text-gray-900">
                   关于我们
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-600 hover:text-gray-900">
+                <a href="mailto:songzhiyuan98@gmail.com" className="text-gray-600 hover:text-gray-900">
                   联系我们
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-600 hover:text-gray-900">
+                <a href="/#about" className="text-gray-600 hover:text-gray-900">
                   隐私政策
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-600 hover:text-gray-900">
+                <a href="/#about" className="text-gray-600 hover:text-gray-900">
                   使用条款
                 </a>
               </li>

@@ -4,10 +4,8 @@ import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { useDispatch } from "react-redux";
 import { authRequest, authSuccess, authFail } from "../store/authSlice";
 import authService from "../services/authService";
-import logo from "../assets/logo.svg";
 import { FcGoogle } from "react-icons/fc";
 import { setSubscriptionStatus } from "../store/userSlice";
-import axios from "axios";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");

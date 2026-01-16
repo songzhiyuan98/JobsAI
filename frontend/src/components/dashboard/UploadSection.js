@@ -12,7 +12,6 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { FiLoader } from "react-icons/fi";
 import LoadingMaskAI from "./LoadingMaskAI";
 import { useSelector, useDispatch } from "react-redux";
 import { Tooltip } from "react-tooltip";
@@ -253,8 +252,8 @@ export default function UploadSection() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setRemainingUsage(response.data.remainingUsage);
-      } catch (error) {
-        console.error("获取剩余使用次数失败:", error);
+      } catch (err) {
+        console.error("获取剩余使用次数失败:", err);
       }
     };
 

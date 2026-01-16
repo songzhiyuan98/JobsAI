@@ -1,24 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { FiUser, FiAward, FiLoader, FiAlertTriangle } from "react-icons/fi";
+import { FiAward, FiLoader, FiAlertTriangle } from "react-icons/fi";
 import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
 const AccountSettingsSection = () => {
-  const { user } = useSelector((state) => state.auth);
   const { subscriptionStatus } = useSelector((state) => state.user);
-  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [remainingUsage, setRemainingUsage] = useState({
     analysis: 0,
     coverLetter: 0,
   });
-
-  const isGoogleUser = user?.authProviders?.some(
-    (provider) => provider.provider === "google"
-  );
 
   const fetchUserData = async () => {
     try {

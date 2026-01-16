@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   ArrowLeft,
   Download,
   Edit,
-  Share2,
   Lightbulb,
   Star,
   FileText,
@@ -18,7 +17,6 @@ export default function CoverLetterReport() {
   const [coverLetter, setCoverLetter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const letterRef = useRef(null);
 
   useEffect(() => {
     const fetchCoverLetter = async () => {

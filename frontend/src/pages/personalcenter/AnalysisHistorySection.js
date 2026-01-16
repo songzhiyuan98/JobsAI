@@ -7,8 +7,6 @@ import {
   FiEye,
   FiLoader,
   FiAlertTriangle,
-  FiMessageSquare,
-  FiStar,
   FiBarChart2,
   FiTarget,
   FiTrendingUp,

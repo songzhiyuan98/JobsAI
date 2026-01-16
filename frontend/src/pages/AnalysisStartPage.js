@@ -4,9 +4,6 @@ import axios from "axios";
 import {
   FiArrowLeft,
   FiArrowRight,
-  FiEdit,
-  FiUser,
-  FiInfo,
   FiLoader,
   FiCheck,
   FiFileText,
@@ -15,12 +12,9 @@ import {
   FiEye,
   FiRefreshCw,
   FiCheckCircle,
-  FiTool,
   FiX,
-  FiMessageSquare,
   FiAlertTriangle,
   FiUpload,
-  FiPlus,
 } from "react-icons/fi";
 import ResumePreview from "../components/resume/ResumePreview";
 import JobConfirmation from "../components/job/JobConfirmation";
@@ -40,10 +34,8 @@ const AnalysisStartPage = () => {
   const [parsedJob, setParsedJob] = useState(null);
   const [jobVerificationStep, setJobVerificationStep] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
-  const [analysisStage, setAnalysisStage] = useState("");
 
   // 职位和简历状态
-  const [jobs, setJobs] = useState([]);
   const [resumes, setResumes] = useState([]);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [selectedResumeId, setSelectedResumeId] = useState(null);
@@ -54,16 +46,6 @@ const AnalysisStartPage = () => {
   const [showResumePreview, setShowResumePreview] = useState(false);
   const [previewResumeId, setPreviewResumeId] = useState(null);
 
-  // 编辑模式状态
-  const [editMode, setEditMode] = useState({
-    basicInfo: false,
-    techStack: false,
-    requirements: false,
-    qualifications: false,
-  });
-
-  // 新添加的技术栈
-  const [newTech, setNewTech] = useState("");
 
   // 获取用户保存的职位列表和简历
   useEffect(() => {
@@ -195,11 +177,6 @@ const AnalysisStartPage = () => {
     }
   };
 
-  // 选择职位
-  const handleSelectJob = (job) => {
-    setSelectedJobId(job._id);
-    setSelectedJob(job);
-  };
 
   // 选择简历
   const handleSelectResume = (resume) => {

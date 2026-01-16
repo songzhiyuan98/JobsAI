@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -6,9 +6,6 @@ import {
   FiX,
   FiArrowLeft,
   FiCheckCircle,
-  FiPlus,
-  FiBriefcase,
-  FiSearch,
   FiCpu,
 } from "react-icons/fi";
 import AITypingAnimation from "../components/AITypingAnimation";

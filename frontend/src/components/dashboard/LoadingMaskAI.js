@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Brain, Cpu, Sparkles } from "lucide-react";
+import { Brain, Sparkles } from "lucide-react";
 
 // 不同类型的 step 文案
 const stepTextMap = {

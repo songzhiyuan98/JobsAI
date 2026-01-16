@@ -69,7 +69,7 @@ export const fetchUserUsage = createAsyncThunk(
 // 检查功能权限
 export const checkFeaturePermission = createAsyncThunk(
   "user/checkFeaturePermission",
-  async ({ feature, model }, { getState }) => {
+  async ({ feature }, { getState }) => {
     const state = getState();
     const { subscriptionStatus } = state.user;
 

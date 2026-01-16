@@ -5,7 +5,6 @@ import {
   FiEdit,
   FiX,
   FiPlus,
-  FiArrowRight,
   FiSave,
   FiAlertCircle,
 } from "react-icons/fi";
@@ -58,14 +57,6 @@ const JobConfirmation = ({ parsedJob, setParsedJob, onSuccess, onCancel }) => {
     });
   };
 
-  const addTechStack = () => {
-    if (newTech.trim() === "") return;
-    setParsedJob({
-      ...parsedJob,
-      tech_stack: [...(parsedJob.tech_stack || []), newTech.trim()],
-    });
-    setNewTech("");
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

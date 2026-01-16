@@ -12,7 +12,6 @@ import { FcGoogle } from "react-icons/fc";
 import { useDispatch } from "react-redux";
 import { authRequest, authSuccess, authFail } from "../store/authSlice";
 import authService from "../services/authService";
-import logo from "../assets/logo.svg";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({

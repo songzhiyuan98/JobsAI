@@ -1,4 +1,4 @@
-import { ArrowRight, FileSearch, FileText, Award, Zap } from "lucide-react";
+import { FileSearch, FileText, Award, Zap } from "lucide-react";
 export default function FeatureSection() {
   // ...直接复制你原来的HeroSection内容...
   return (

@@ -21,7 +21,7 @@ export default function PricingSection() {
 
   const handleCancel = async () => {
     try {
-      const res = await axios.post(
+      await axios.post(
         "/api/payment/cancel-subscription",
         {},
         {
