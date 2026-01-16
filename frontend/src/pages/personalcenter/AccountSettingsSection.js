@@ -13,6 +13,7 @@ const AccountSettingsSection = () => {
     analysis: 0,
     coverLetter: 0,
   });
+  const [, setUserData] = useState(null);
 
   const fetchUserData = async () => {
     try {

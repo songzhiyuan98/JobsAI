@@ -1,175 +1,153 @@
 # 🚀 TalentSync
 
-> AI驱动的智能求职助手 - 简历分析、职位匹配、求职信生成、面试模拟
+> AI-Powered Career Assistant | AI驱动的智能求职助手
+> 
+> Resume Analysis, Job Matching, Cover Letter Generation, Interview Simulation
+> 简历分析、职位匹配、求职信生成、面试模拟
 
 [![Live Demo](https://img.shields.io/badge/Demo-Live-brightgreen)](https://talentsync-green.vercel.app)
 [![React](https://img.shields.io/badge/React-18.2.0-blue)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-green)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-brightgreen)](https://www.mongodb.com/)
 
-## 📖 项目简介
+## 📖 Project Overview | 项目简介
+
+TalentSync is a full-stack web application that helps job seekers improve their success rate through AI technology. The platform provides resume-to-job matching analysis, intelligent cover letter generation, AI interview simulation, and more. It supports multiple AI models (GPT-4o, GPT-o1, Google Gemini) to help users optimize resumes, target applications, and enhance interview performance.
 
 TalentSync 是一个全栈 Web 应用，帮助求职者通过 AI 技术提升求职成功率。平台提供简历与职位匹配度分析、智能求职信生成、AI 面试模拟等核心功能，支持多种 AI 模型（GPT-4o、GPT-o1、Google Gemini），帮助用户优化简历、精准投递、提升面试表现。
 
-### 🌐 在线演示
+### 🌐 Live Demo | 在线演示
 
-**🔗 [访问 Demo](https://talentsync-green.vercel.app)**
+**🔗 [Visit Demo | 访问演示](https://talentsync-green.vercel.app)**
 
+> Currently in test mode - all features are free to experience
 > 当前为测试运营版本，所有功能免费开放体验
 
 ---
 
-## ✨ 核心功能
+## ✨ Core Features | 核心功能
 
-### 📊 简历与职位匹配分析
-- **ATS 分析**：关键词匹配、格式检查、通过概率评估
-- **排名分析**：预测排名百分位、与 Top 候选人对比
-- **HR 分析**：第一印象评估、面试推荐、表达问题识别
-- **技术分析**：可信度评估、潜在风险识别、预期面试问题
+### 📊 Resume-to-Job Matching Analysis | 简历与职位匹配分析
+- **ATS Analysis | ATS 分析**: Keyword matching, format checking, pass probability assessment
+- **Ranking Analysis | 排名分析**: Predict ranking percentile, compare with top candidates
+- **HR Analysis | HR 分析**: First impression assessment, interview recommendation, expression issue identification
+- **Technical Analysis | 技术分析**: Credibility assessment, risk identification, expected interview questions
 
-### ✍️ 智能求职信生成
-- 基于简历和目标职位自动生成个性化求职信
-- 突出相关经验和技能匹配
-- 支持多语言和多种风格
-- 一键导出 PDF
+### ✍️ Intelligent Cover Letter Generation | 智能求职信生成
+- Automatically generate personalized cover letters based on resume and target job
+- Highlight relevant experience and skill matching
+- Support multiple languages and styles
+- One-click PDF export
 
-### 💼 职位管理
-- 职位描述智能解析（JD Parsing）
-- 职位信息结构化存储
-- 职位状态跟踪（已保存、已投递、面试中、已录用、已拒绝）
+### 💼 Job Management | 职位管理
+- Intelligent job description parsing (JD Parsing)
+- Structured job information storage
+- Job status tracking (Saved, Applied, Interviewing, Offered, Rejected)
 
-### 🤖 AI 面试模拟
-- 10 轮面试模拟（2 轮行为面试 + 8 轮技术面试）
-- 基于简历和 JD 的上下文问题生成
-- 2-3 层跟进深度
-- 综合评分和改进建议
+### 🤖 AI Interview Simulation | AI 面试模拟
+- 10-round interview simulation (2 behavioral + 8 technical rounds)
+- Context-aware question generation based on resume and JD
+- 2-3 levels of follow-up depth
+- Comprehensive scoring and improvement suggestions
 
-### 🔐 用户系统
-- 邮箱注册/登录
-- Google OAuth 2.0 登录
-- JWT 认证
-- 订阅管理（Free、Premium、Enterprise）
+### 🔐 User System | 用户系统
+- Email registration/login
+- Google OAuth 2.0 login
+- JWT authentication
+- Subscription management (Free, Premium, Enterprise)
 
 ---
 
-## 🛠️ 技术栈
+## 🛠️ Tech Stack
 
 ### Frontend
-- **框架**: React 18.2.0
-- **路由**: react-router-dom v6.30.0
-- **状态管理**: Redux Toolkit v2.6.1
-- **样式**: Tailwind CSS + Material-UI v7.0.0
-- **动画**: Framer Motion v12.12.1
-- **PDF 处理**: jspdf + html2pdf.js
-- **图表**: ECharts v5.6.0
+- **Framework**: React 18.2.0
+- **Routing**: react-router-dom v6.30.0
+- **State Management**: Redux Toolkit v2.6.1
+- **Styling**: Tailwind CSS + Material-UI v7.0.0
+- **Animation**: Framer Motion v12.12.1
+- **PDF Processing**: jspdf + html2pdf.js
+- **Charts**: ECharts v5.6.0
 
 ### Backend
-- **运行时**: Node.js
-- **框架**: Express.js v4.21.2
-- **数据库**: MongoDB + Mongoose v8.13.0
-- **认证**: JWT + Google OAuth 2.0 + bcryptjs
-- **AI 服务**: OpenAI (GPT-4o, GPT-o1) + Google Gemini
-- **支付**: Stripe v18.1.0
-- **文件处理**: multer + pdf-parse + pdfkit
+- **Runtime**: Node.js
+- **Framework**: Express.js v4.21.2
+- **Database**: MongoDB + Mongoose v8.13.0
+- **Authentication**: JWT + Google OAuth 2.0 + bcryptjs
+- **AI Services**: OpenAI (GPT-4o, GPT-o1) + Google Gemini
+- **Payment**: Stripe v18.1.0
+- **File Processing**: multer + pdf-parse + pdfkit
 
-### 部署
-- **前端**: Vercel
-- **后端**: Railway
-- **数据库**: MongoDB Atlas
+### Deployment
+- **Frontend**: Vercel
+- **Backend**: Railway
+- **Database**: MongoDB Atlas
 
 ---
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 TalentSync/
-├── backend/                        # 后端服务
-│   ├── app.js                      # Express 应用入口
-│   ├── setup.js                    # 初始化设置
-│   ├── models/                     # Mongoose 数据模型
-│   │   ├── User.js                 # 用户模型
-│   │   ├── Subscription.js         # 会员订阅模型
-│   │   ├── Resume.js               # 简历模型
-│   │   ├── Analysis.js             # 智能分析模型
-│   │   ├── CoverLetter.js          # 求职信模型
-│   │   ├── Interview.js            # 面试相关模型
-│   │   └── UserJob.js              # 用户职位关联
-│   ├── controllers/                # 业务控制器
-│   │   ├── auth.js                 # 用户认证
-│   │   ├── paymentController.js    # Stripe 支付与订阅
-│   │   ├── resumeController.js     # 简历相关
-│   │   ├── jobController.js        # 职位相关
-│   │   ├── analysisController.js   # 智能分析
-│   │   ├── coverLetterController.js # 求职信
-│   │   └── interviewController.js  # 面试相关
-│   ├── routes/                     # 路由定义
-│   ├── middleware/                 # 中间件
-│   │   ├── auth.js                 # 登录校验中间件
-│   │   ├── checkSubscription.js    # 订阅状态检查中间件
-│   │   └── uploadMiddleware.js     # 文件上传中间件
-│   ├── services/                   # 业务服务
-│   │   ├── resumeAnalysisService.js # 简历分析服务
-│   │   ├── aiPrompts.js            # AI 提示词管理
-│   │   ├── aiService.js            # AI 服务集成
-│   │   ├── jobParser.js            # 职位解析服务
-│   │   └── resumeParser.js         # 简历解析服务
-│   └── config/                     # 配置文件
-│       └── googleOAuth.js          # Google OAuth 配置
-├── frontend/                       # 前端项目
+├── backend/                        # Backend service
+│   ├── app.js                      # Express app entry
+│   ├── setup.js                    # Initialization
+│   ├── models/                     # Mongoose models
+│   │   ├── User.js                 # User model
+│   │   ├── Subscription.js         # Subscription model
+│   │   ├── Resume.js               # Resume model
+│   │   ├── Analysis.js             # Analysis model
+│   │   ├── CoverLetter.js          # Cover letter model
+│   │   ├── Interview.js            # Interview model
+│   │   └── UserJob.js              # User-job relation
+│   ├── controllers/                # Business controllers
+│   ├── routes/                     # Route definitions
+│   ├── middleware/                 # Middleware
+│   ├── services/                   # Business services
+│   └── config/                     # Configuration
+├── frontend/                       # Frontend project
 │   ├── src/
-│   │   ├── pages/                  # 页面级组件
-│   │   │   ├── Dashboard.js        # 仪表盘主面板
-│   │   │   ├── PersonalCenter.js   # 个人中心
-│   │   │   ├── JobManagerPage.js   # 职位管理
-│   │   │   ├── AnalysisStartPage.js # 智能分析入口
-│   │   │   └── ...
-│   │   ├── components/             # 复用型组件
-│   │   │   ├── dashboard/          # 仪表盘相关组件
-│   │   │   ├── job/                # 职位相关组件
-│   │   │   ├── resume/             # 简历相关组件
-│   │   │   └── analysis/           # 智能分析相关组件
-│   │   ├── store/                  # Redux 状态管理
-│   │   │   ├── userSlice.js        # 用户/会员状态
-│   │   │   ├── authSlice.js        # 登录状态
-│   │   │   └── userActions.js      # 用户相关异步 action
-│   │   └── services/               # API 封装
-│   └── public/                     # 静态资源
-└── README.md                       # 项目说明
+│   │   ├── pages/                  # Page components
+│   │   ├── components/             # Reusable components
+│   │   ├── store/                  # Redux state management
+│   │   └── services/               # API services
+│   └── public/                     # Static assets
+└── README.md                       # Project documentation
 ```
 
 ---
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 环境要求
+### Prerequisites
 
 - Node.js >= 16.0.0
-- MongoDB (本地或 MongoDB Atlas)
-- npm 或 yarn
+- MongoDB (local or MongoDB Atlas)
+- npm or yarn
 
-### 安装步骤
+### Installation
 
-1. **克隆项目**
+1. **Clone the repository**
 ```bash
 git clone https://github.com/your-username/talentsync.git
 cd talentsync
 ```
 
-2. **安装后端依赖**
+2. **Install backend dependencies**
 ```bash
 cd backend
 npm install
 ```
 
-3. **安装前端依赖**
+3. **Install frontend dependencies**
 ```bash
 cd ../frontend
 npm install
 ```
 
-4. **配置环境变量**
+4. **Configure environment variables**
 
-创建 `backend/.env` 文件：
+Create `backend/.env`:
 ```env
 MONGO_URI=mongodb://localhost:27017/talentsync
 OPENAI_API_KEY=sk-proj-...
@@ -187,145 +165,145 @@ STRIPE_ENTERPRISE_PRICE_ID=price_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-创建 `frontend/.env` 文件：
+Create `frontend/.env`:
 ```env
 REACT_APP_API_URL=http://localhost:3001
 ```
 
-5. **启动开发服务器**
+5. **Start development servers**
 
-启动后端（端口 3001）：
+Start backend (port 3001):
 ```bash
 cd backend
 npm start
 ```
 
-启动前端（端口 3000）：
+Start frontend (port 3000):
 ```bash
 cd frontend
 npm start
 ```
 
-6. **访问应用**
+6. **Access the application**
 
-打开浏览器访问 [http://localhost:3000](http://localhost:3000)
-
----
-
-## 📡 API 文档
-
-### 认证相关
-- `POST /api/auth/register` - 用户注册
-- `POST /api/auth/login` - 用户登录
-- `GET /api/auth/google` - Google OAuth 登录
-- `GET /api/auth/me` - 获取当前用户信息
-- `GET /api/auth/logout` - 退出登录
-
-### 简历管理
-- `POST /api/resumes/upload` - 上传简历
-- `GET /api/resumes` - 获取所有简历
-- `GET /api/resumes/active` - 获取激活简历
-- `PUT /api/resumes/:id/set-active` - 设置激活简历
-- `DELETE /api/resumes/:id` - 删除简历
-
-### 职位管理
-- `POST /api/jobs/parse` - 解析职位描述
-- `POST /api/jobs` - 保存职位
-- `GET /api/jobs/user` - 获取用户所有职位
-- `GET /api/jobs/:id` - 获取职位详情
-
-### 智能分析
-- `POST /api/analysis` - 创建分析
-- `GET /api/analysis/:id` - 获取分析详情
-- `GET /api/analysis` - 获取用户所有分析
-
-### 求职信
-- `POST /api/cover-letters` - 生成求职信
-- `GET /api/cover-letters/:id` - 获取求职信
-- `GET /api/cover-letters/:id/download` - 下载 PDF
-
-### 支付与订阅
-- `POST /api/payment/create-checkout-session` - 创建支付会话
-- `GET /api/payment/get-subscription-status` - 获取订阅状态
-- `POST /api/payment/cancel-subscription` - 取消订阅
-
-更多 API 详情请参考 [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md)
+Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ---
 
-## 🎯 订阅计划
+## 📡 API Documentation
 
-| 功能 | Free | Premium | Enterprise |
-|------|------|---------|------------|
-| Gemini 模型 | ✅ 无限 | ✅ 无限 | ✅ 无限 |
-| GPT-4o 分析 | 1次/天 | ✅ 无限 | ✅ 无限 |
-| GPT-o1 分析 | ❌ | ❌ | ✅ 无限 |
-| 求职信生成 | ✅ | ✅ | ✅ |
-| 面试模拟 | ✅ | ✅ | ✅ |
+### Authentication
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/auth/google` - Google OAuth login
+- `GET /api/auth/me` - Get current user info
+- `GET /api/auth/logout` - Logout
 
----
+### Resume Management
+- `POST /api/resumes/upload` - Upload resume
+- `GET /api/resumes` - Get all resumes
+- `GET /api/resumes/active` - Get active resume
+- `PUT /api/resumes/:id/set-active` - Set active resume
+- `DELETE /api/resumes/:id` - Delete resume
 
-## 🔒 安全特性
+### Job Management
+- `POST /api/jobs/parse` - Parse job description
+- `POST /api/jobs` - Save job
+- `GET /api/jobs/user` - Get user's jobs
+- `GET /api/jobs/:id` - Get job details
 
-- JWT Token 认证
-- 密码 bcrypt 加密
-- Google OAuth 2.0 安全登录
-- Stripe 安全支付集成
-- 文件上传大小限制（10MB）
-- CORS 配置
-- Helmet 安全头设置
+### Analysis
+- `POST /api/analysis` - Create analysis
+- `GET /api/analysis/:id` - Get analysis details
+- `GET /api/analysis` - Get user's analyses
 
----
+### Cover Letters
+- `POST /api/cover-letters` - Generate cover letter
+- `GET /api/cover-letters/:id` - Get cover letter
+- `GET /api/cover-letters/:id/download` - Download PDF
 
-## 📝 开发规范
+### Payment & Subscription
+- `POST /api/payment/create-checkout-session` - Create payment session
+- `GET /api/payment/get-subscription-status` - Get subscription status
+- `POST /api/payment/cancel-subscription` - Cancel subscription
 
-- **前端**: React 函数式组件，禁止 class 组件
-- **状态管理**: Redux Toolkit，统一 action 命名规范
-- **API 请求**: 统一使用 axios，所有 API 路径以 `/api/` 开头
-- **代码风格**: ES6+ 语法，统一使用 async/await
-- **命名规范**: camelCase（变量/函数），PascalCase（组件文件）
-
----
-
-## 🤝 贡献指南
-
-欢迎提交 Issue 和 Pull Request！
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
+For more API details, see [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md)
 
 ---
 
-## 📄 许可证
+## 🎯 Subscription Plans | 订阅计划
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
-
----
-
-## 📧 联系方式
-
-- **邮箱**: songzhiyuan98@gmail.com
-- **项目链接**: [https://github.com/your-username/talentsync](https://github.com/your-username/talentsync)
-- **在线演示**: [https://talentsync-green.vercel.app](https://talentsync-green.vercel.app)
+| Feature | Free | Premium | Enterprise |
+|---------|------|---------|------------|
+| Gemini Model | ✅ Unlimited | ✅ Unlimited | ✅ Unlimited |
+| GPT-4o Analysis | 1/day | ✅ Unlimited | ✅ Unlimited |
+| GPT-o1 Analysis | ❌ | ❌ | ✅ Unlimited |
+| Cover Letter Generation | ✅ | ✅ | ✅ |
+| Interview Simulation | ✅ | ✅ | ✅ |
 
 ---
 
-## 🙏 致谢
+## 🔒 Security Features
+
+- JWT Token authentication
+- Password bcrypt encryption
+- Google OAuth 2.0 secure login
+- Stripe secure payment integration
+- File upload size limit (10MB)
+- CORS configuration
+- Helmet security headers
+
+---
+
+## 📝 Development Guidelines
+
+- **Frontend**: React functional components only, no class components
+- **State Management**: Redux Toolkit with unified action naming
+- **API Requests**: Use axios, all API paths start with `/api/`
+- **Code Style**: ES6+ syntax, use async/await
+- **Naming**: camelCase (variables/functions), PascalCase (component files)
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 📧 Contact | 联系方式
+
+- **Email**: songzhiyuan98@gmail.com
+- **Project Link**: [https://github.com/your-username/talentsync](https://github.com/your-username/talentsync)
+- **Live Demo**: [https://talentsync-green.vercel.app](https://talentsync-green.vercel.app)
+
+---
+
+## 🙏 Acknowledgments
 
 - [OpenAI](https://openai.com/) - GPT-4o, GPT-o1 API
 - [Google Gemini](https://gemini.google.com/) - Gemini API
-- [Stripe](https://stripe.com/) - 支付服务
-- [Vercel](https://vercel.com/) - 前端部署
-- [Railway](https://railway.app/) - 后端部署
+- [Stripe](https://stripe.com/) - Payment services
+- [Vercel](https://vercel.com/) - Frontend deployment
+- [Railway](https://railway.app/) - Backend deployment
 
 ---
 
 <div align="center">
 
-**⭐ 如果这个项目对你有帮助，请给个 Star！⭐**
+**⭐ If this project helps you, please give it a Star! ⭐**
 
 Made with ❤️ by TalentSync Team
 

@@ -15,6 +15,7 @@ import {
   FiX,
   FiAlertTriangle,
   FiUpload,
+  FiMessageSquare,
 } from "react-icons/fi";
 import ResumePreview from "../components/resume/ResumePreview";
 import JobConfirmation from "../components/job/JobConfirmation";
