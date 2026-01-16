@@ -8,7 +8,7 @@
 
 如果你发现了 bug，请：
 
-1. 检查 [Issues](https://github.com/your-username/talentsync/issues) 确认该 bug 尚未被报告
+1. 检查 [Issues](https://github.com/songzhiyuan98/TalentSync/issues) 确认该 bug 尚未被报告
 2. 如果不存在，创建一个新的 Issue
 3. 使用 [Bug Report 模板](.github/ISSUE_TEMPLATE/bug_report.md)
 4. 提供尽可能详细的信息，包括复现步骤、预期行为和实际行为
@@ -17,7 +17,7 @@
 
 如果你有功能建议：
 
-1. 检查 [Issues](https://github.com/your-username/talentsync/issues) 确认该功能尚未被提出
+1. 检查 [Issues](https://github.com/songzhiyuan98/TalentSync/issues) 确认该功能尚未被提出
 2. 创建一个新的 Issue
 3. 使用 [Feature Request 模板](.github/ISSUE_TEMPLATE/feature_request.md)
 4. 详细描述功能需求和使用场景

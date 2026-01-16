@@ -122,7 +122,7 @@ TalentSync/
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/your-username/talentsync.git
+git clone https://github.com/songzhiyuan98/TalentSync.git
 cd talentsync
 ```
 
@@ -278,7 +278,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📧 Contact | 联系方式
 
 - **Email**: songzhiyuan98@gmail.com
-- **Project Link**: [https://github.com/your-username/talentsync](https://github.com/your-username/talentsync)
+- **Project Link**: [https://github.com/songzhiyuan98/TalentSync](https://github.com/songzhiyuan98/TalentSync)
 - **Live Demo**: [https://talentsync-green.vercel.app](https://talentsync-green.vercel.app)
 
 ---
