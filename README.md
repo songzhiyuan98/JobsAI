@@ -2,8 +2,8 @@
 
 > AI-Powered Career Assistant | AI驱动的智能求职助手
 > 
-> Resume Analysis, Job Matching, Cover Letter Generation, Interview Simulation
-> 简历分析、职位匹配、求职信生成、面试模拟
+> Resume Analysis, Job Matching, Cover Letter Generation
+> 简历分析、职位匹配、求职信生成
 
 [![Live Demo](https://img.shields.io/badge/Demo-Live-brightgreen)](https://talentsync-green.vercel.app)
 [![React](https://img.shields.io/badge/React-18.2.0-blue)](https://reactjs.org/)
@@ -12,9 +12,9 @@
 
 ## 📖 Project Overview | 项目简介
 
-TalentSync is a full-stack web application that helps job seekers improve their success rate through AI technology. The platform provides resume-to-job matching analysis, intelligent cover letter generation, AI interview simulation, and more. It supports multiple AI models (GPT-4o, GPT-o1, Google Gemini) to help users optimize resumes, target applications, and enhance interview performance.
+TalentSync is a full-stack web application that helps job seekers improve their success rate through AI technology. The platform provides resume-to-job matching analysis, intelligent cover letter generation, and more. It supports multiple AI models (GPT-4o, GPT-o1, Google Gemini) to help users optimize resumes, target applications, and prepare for interviews.
 
-TalentSync 是一个全栈 Web 应用，帮助求职者通过 AI 技术提升求职成功率。平台提供简历与职位匹配度分析、智能求职信生成、AI 面试模拟等核心功能，支持多种 AI 模型（GPT-4o、GPT-o1、Google Gemini），帮助用户优化简历、精准投递、提升面试表现。
+TalentSync 是一个全栈 Web 应用，帮助求职者通过 AI 技术提升求职成功率。平台提供简历与职位匹配度分析、智能求职信生成等核心功能，支持多种 AI 模型（GPT-4o、GPT-o1、Google Gemini），帮助用户优化简历、精准投递、做好面试准备。
 
 ### 🌐 Live Demo | 在线演示
 
@@ -31,7 +31,7 @@ TalentSync 是一个全栈 Web 应用，帮助求职者通过 AI 技术提升求
 - **ATS Analysis | ATS 分析**: Keyword matching, format checking, pass probability assessment
 - **Ranking Analysis | 排名分析**: Predict ranking percentile, compare with top candidates
 - **HR Analysis | HR 分析**: First impression assessment, interview recommendation, expression issue identification
-- **Technical Analysis | 技术分析**: Credibility assessment, risk identification, expected interview questions
+- **Technical Analysis | 技术分析**: Credibility assessment, risk identification, expected interview questions prediction
 
 ### ✍️ Intelligent Cover Letter Generation | 智能求职信生成
 - Automatically generate personalized cover letters based on resume and target job
@@ -43,12 +43,6 @@ TalentSync 是一个全栈 Web 应用，帮助求职者通过 AI 技术提升求
 - Intelligent job description parsing (JD Parsing)
 - Structured job information storage
 - Job status tracking (Saved, Applied, Interviewing, Offered, Rejected)
-
-### 🤖 AI Interview Simulation | AI 面试模拟
-- 10-round interview simulation (2 behavioral + 8 technical rounds)
-- Context-aware question generation based on resume and JD
-- 2-3 levels of follow-up depth
-- Comprehensive scoring and improvement suggestions
 
 ### 🔐 User System | 用户系统
 - Email registration/login
@@ -98,7 +92,6 @@ TalentSync/
 │   │   ├── Resume.js               # Resume model
 │   │   ├── Analysis.js             # Analysis model
 │   │   ├── CoverLetter.js          # Cover letter model
-│   │   ├── Interview.js            # Interview model
 │   │   └── UserJob.js              # User-job relation
 │   ├── controllers/                # Business controllers
 │   ├── routes/                     # Route definitions
@@ -239,7 +232,6 @@ For more API details, see [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md)
 | GPT-4o Analysis | 1/day | ✅ Unlimited | ✅ Unlimited |
 | GPT-o1 Analysis | ❌ | ❌ | ✅ Unlimited |
 | Cover Letter Generation | ✅ | ✅ | ✅ |
-| Interview Simulation | ✅ | ✅ | ✅ |
 
 ---
 
