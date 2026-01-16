@@ -2,13 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   FiUser,
-  FiMail,
   FiBriefcase,
-  FiMapPin,
   FiCode,
-  FiFileText,
-  FiBarChart2,
-  FiCalendar,
   FiAlertTriangle,
   FiLoader,
 } from "react-icons/fi";

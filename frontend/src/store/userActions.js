@@ -1,13 +1,9 @@
 import axios from "axios";
 import {
   setSubscriptionStatus,
-  setLoading,
-  setError,
-  setDailyUsage,
-  setLastUsageDate,
   clearUserState,
 } from "./userSlice";
-import { authSuccess, logout as authLogout } from "./authSlice";
+import { logout as authLogout } from "./authSlice";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
 // 设置 axios 默认配置
