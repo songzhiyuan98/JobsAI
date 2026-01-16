@@ -18,7 +18,6 @@ const JobSubmitterPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [analysisProgress, setAnalysisProgress] = useState(0);
-  const [analysisStage, setAnalysisStage] = useState("");
 
   // 可以为AI分析阶段自定义提示消息
   const aiAnalysisMessages = [

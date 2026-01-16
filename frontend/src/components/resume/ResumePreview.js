@@ -18,10 +18,6 @@ const ResumePreview = ({ resumeId, onClose, onEdit }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchResumeDetails();
-  }, [fetchResumeDetails]);
-
   const fetchResumeDetails = useCallback(async () => {
     try {
       setLoading(true);
@@ -37,6 +33,10 @@ const ResumePreview = ({ resumeId, onClose, onEdit }) => {
       setLoading(false);
     }
   }, [resumeId]);
+
+  useEffect(() => {
+    fetchResumeDetails();
+  }, [fetchResumeDetails]);
 
   if (loading) {
     return (

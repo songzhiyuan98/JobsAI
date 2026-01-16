@@ -4,12 +4,10 @@ import axios from "axios";
 import {
   FiBriefcase,
   FiEdit,
-  FiTrash,
   FiPlus,
   FiChevronRight,
   FiChevronDown,
   FiLoader,
-  FiX,
   FiAlertCircle,
   FiArrowLeft,
   FiInfo,
@@ -31,27 +29,6 @@ const JobManagerPage = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [viewingReportsJobId, setViewingReportsJobId] = useState(null);
   const [viewingReportsJobTitle, setViewingReportsJobTitle] = useState("");
-
-  // 状态选项
-  const statusOptions = [
-    { value: "saved", label: "已保存", color: "bg-blue-100 text-blue-800" },
-    {
-      value: "applied",
-      label: "已申请",
-      color: "bg-purple-100 text-purple-800",
-    },
-    {
-      value: "interviewing",
-      label: "面试中",
-      color: "bg-amber-100 text-amber-800",
-    },
-    {
-      value: "offered",
-      label: "已收到offer",
-      color: "bg-green-100 text-green-800",
-    },
-    { value: "rejected", label: "已拒绝", color: "bg-red-100 text-red-800" },
-  ];
 
   // 获取用户保存的所有职位
   const fetchJobs = async () => {

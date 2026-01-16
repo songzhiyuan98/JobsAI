@@ -88,7 +88,7 @@ const AnalysisStartPage = () => {
     }
 
     fetchResumes();
-  }, [fetchResumes]);
+  }, [navigate, fetchResumes]);
 
   const fetchResumes = useCallback(async () => {
     try {

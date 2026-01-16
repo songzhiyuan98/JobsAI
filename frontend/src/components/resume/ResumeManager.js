@@ -25,10 +25,6 @@ const ResumeManager = ({ onResumeChange }) => {
   const [previewResumeId, setPreviewResumeId] = useState(null);
   const [editingResumeId, setEditingResumeId] = useState(null);
 
-  useEffect(() => {
-    fetchResumes();
-  }, [fetchResumes]);
-
   const fetchResumes = useCallback(async () => {
     try {
       setLoading(true);
@@ -51,6 +47,10 @@ const ResumeManager = ({ onResumeChange }) => {
       console.error("获取简历错误:", err);
     }
   }, [onResumeChange]);
+
+  useEffect(() => {
+    fetchResumes();
+  }, [fetchResumes]);
 
   const handleResumeUploadSuccess = (resume) => {
     setShowUploader(false);

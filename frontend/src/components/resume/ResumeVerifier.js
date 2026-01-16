@@ -26,10 +26,6 @@ const ResumeVerifier = ({ resumeId, onClose, onSuccess }) => {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("basicInfo");
 
-  useEffect(() => {
-    fetchResumeDetails();
-  }, [fetchResumeDetails]);
-
   const fetchResumeDetails = useCallback(async () => {
     try {
       setLoading(true);
@@ -46,6 +42,10 @@ const ResumeVerifier = ({ resumeId, onClose, onSuccess }) => {
       console.error("获取简历详情错误:", err);
     }
   }, [resumeId]);
+
+  useEffect(() => {
+    fetchResumeDetails();
+  }, [fetchResumeDetails]);
 
   const toggleEditMode = (field) => {
     setEditModeFields({
