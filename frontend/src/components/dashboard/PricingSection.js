@@ -248,7 +248,7 @@ export default function PricingSection() {
         <div className="mt-12 text-center">
           <p className="text-gray-500 text-sm">
             所有计划均可随时取消。需要更多定制化服务？
-            <a href="#" className="text-black font-medium">
+            <a href="mailto:songzhiyuan98@gmail.com" className="text-black font-medium">
               联系我们
             </a>
           </p>

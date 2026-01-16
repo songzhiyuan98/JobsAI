@@ -142,7 +142,7 @@ export default function UploadSection() {
   const [resume, setResume] = useState(null);
   const [jd, setJd] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [, setError] = useState("");
   const [step, setStep] = useState(0);
   const [resumeData, setResumeData] = useState(null);
   const [jdData, setJdData] = useState(null);

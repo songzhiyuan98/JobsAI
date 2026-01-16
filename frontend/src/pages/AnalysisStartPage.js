@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -10,7 +10,6 @@ import {
   FiActivity,
   FiBriefcase,
   FiEye,
-  FiRefreshCw,
   FiCheckCircle,
   FiX,
   FiAlertTriangle,
@@ -89,9 +88,9 @@ const AnalysisStartPage = () => {
     }
 
     fetchResumes();
-  }, []);
+  }, [fetchResumes]);
 
-  const fetchResumes = async () => {
+  const fetchResumes = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -121,7 +120,7 @@ const AnalysisStartPage = () => {
       setError("无法加载数据，请重试");
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   // 从JobSubmit复制的模拟分析进度功能
   const simulateAnalysisProgress = () => {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  FiCheck,
   FiEdit,
   FiSave,
   FiPlus,
@@ -8,7 +7,6 @@ import {
   FiRefreshCw,
   FiTrash,
   FiX,
-  FiCalendar,
   FiUser,
   FiBook,
   FiBriefcase,
@@ -30,9 +28,9 @@ const ResumeVerifier = ({ resumeId, onClose, onSuccess }) => {
 
   useEffect(() => {
     fetchResumeDetails();
-  }, [resumeId]);
+  }, [fetchResumeDetails]);
 
-  const fetchResumeDetails = async () => {
+  const fetchResumeDetails = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -47,7 +45,7 @@ const ResumeVerifier = ({ resumeId, onClose, onSuccess }) => {
       setLoading(false);
       console.error("获取简历详情错误:", err);
     }
-  };
+  }, [resumeId]);
 
   const toggleEditMode = (field) => {
     setEditModeFields({

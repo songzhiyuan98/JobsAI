@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import {
   FiUpload,
-  FiFile,
   FiX,
   FiCheck,
   FiLoader,
@@ -14,7 +13,6 @@ import axios from "axios";
 
 const ResumeUploader = ({ onSuccess, onCancel, existingResumes }) => {
   const [file, setFile] = useState(null);
-  const [filePreviewUrl, setFilePreviewUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [resumeName, setResumeName] = useState("我的简历");
@@ -44,11 +42,8 @@ const ResumeUploader = ({ onSuccess, onCancel, existingResumes }) => {
     setFile(selectedFile);
     setError(null);
 
-    // 创建文件预览URL
+    // 创建文件预览URL (currently not used, but kept for future use)
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setFilePreviewUrl(reader.result);
-    };
     reader.readAsDataURL(selectedFile);
 
     // 自动使用文件名（不带扩展名）作为简历名称
@@ -104,7 +99,6 @@ const ResumeUploader = ({ onSuccess, onCancel, existingResumes }) => {
       if (response.data.success) {
         // 先清理状态
         setFile(null);
-        setFilePreviewUrl(null);
         setResumeName("我的简历");
         setUploading(false);
 
@@ -186,7 +180,6 @@ const ResumeUploader = ({ onSuccess, onCancel, existingResumes }) => {
                 <button
                   onClick={() => {
                     setFile(null);
-                    setFilePreviewUrl(null);
                   }}
                   className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100/70 dark:hover:bg-gray-700/50 rounded-full transition-colors"
                   aria-label="移除文件"

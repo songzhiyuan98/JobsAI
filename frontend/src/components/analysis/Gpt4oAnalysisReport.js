@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -101,11 +101,7 @@ export default function Gpt4oAnalysisReport() {
   });
   const reportRef = useRef(null);
 
-  useEffect(() => {
-    fetchAnalysis();
-  }, [id]);
-
-  const fetchAnalysis = async () => {
+  const fetchAnalysis = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -119,7 +115,11 @@ export default function Gpt4oAnalysisReport() {
       setError(err.response?.data?.message || "获取分析结果失败");
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchAnalysis();
+  }, [fetchAnalysis]);
 
   const toggleSection = (section) => {
     setExpandedSections({

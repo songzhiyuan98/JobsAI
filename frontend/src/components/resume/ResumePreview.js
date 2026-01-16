@@ -20,9 +20,9 @@ const ResumePreview = ({ resumeId, onClose, onEdit }) => {
 
   useEffect(() => {
     fetchResumeDetails();
-  }, [resumeId]);
+  }, [fetchResumeDetails]);
 
-  const fetchResumeDetails = async () => {
+  const fetchResumeDetails = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -36,7 +36,7 @@ const ResumePreview = ({ resumeId, onClose, onEdit }) => {
       setError("无法加载简历信息");
       setLoading(false);
     }
-  };
+  }, [resumeId]);
 
   if (loading) {
     return (

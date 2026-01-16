@@ -6,20 +6,16 @@ import {
   FiCheck,
   FiPlus,
   FiLoader,
-  FiArrowLeft,
   FiDownload,
   FiEye,
   FiAlertTriangle,
-  FiClock,
-  FiStar,
-  FiX,
 } from "react-icons/fi";
 import axios from "axios";
 import ResumeUploader from "./ResumeUploader";
 import ResumePreview from "./ResumePreview";
 import ResumeVerifier from "./ResumeVerifier";
 
-const ResumeManager = ({ onClose, onResumeChange }) => {
+const ResumeManager = ({ onResumeChange }) => {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,9 +27,9 @@ const ResumeManager = ({ onClose, onResumeChange }) => {
 
   useEffect(() => {
     fetchResumes();
-  }, []);
+  }, [fetchResumes]);
 
-  const fetchResumes = async () => {
+  const fetchResumes = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -54,7 +50,7 @@ const ResumeManager = ({ onClose, onResumeChange }) => {
       setLoading(false);
       console.error("获取简历错误:", err);
     }
-  };
+  }, [onResumeChange]);
 
   const handleResumeUploadSuccess = (resume) => {
     setShowUploader(false);
