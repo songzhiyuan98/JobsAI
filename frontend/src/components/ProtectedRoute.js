@@ -1,11 +1,9 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import LoginReminderModal from "./loginmodal";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
-  const location = useLocation();
 
   if (loading) {
     return (

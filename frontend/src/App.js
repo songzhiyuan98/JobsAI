@@ -25,7 +25,6 @@ import { fetchSubscriptionStatus } from "./store/userActions";
 
 function App() {
   const dispatch = useDispatch();
-  const { isAuthenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
     const initializeAuth = async () => {

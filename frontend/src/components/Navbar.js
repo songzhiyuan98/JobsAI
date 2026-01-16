@@ -3,9 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { logout as authLogout } from "../store/authSlice";
-import { FiUser, FiLogIn, FiZap } from "react-icons/fi";
-import authService from "../services/authService";
 import { Menu, X } from "lucide-react";
 import axios from "axios";
 import { logout } from "../store/userActions";
@@ -16,29 +13,10 @@ const Navbar = () => {
   const { subscriptionStatus } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // 监听滚动事件
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -57,7 +35,6 @@ const Navbar = () => {
             );
           }
         } catch (err) {
-          setError("获取用户信息失败");
           console.error("获取用户信息错误:", err);
         } finally {
           setLoading(false);
@@ -70,10 +47,6 @@ const Navbar = () => {
 
     fetchUserData();
   }, [isAuthenticated, dispatch]);
-
-  const toggleDropdown = () => {
-    setDropdownOpen(!dropdownOpen);
-  };
 
   const handleLogout = () => {
     dispatch(logout());
