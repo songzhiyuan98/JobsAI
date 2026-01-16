@@ -46,6 +46,37 @@ const AnalysisStartPage = () => {
   const [showResumePreview, setShowResumePreview] = useState(false);
   const [previewResumeId, setPreviewResumeId] = useState(null);
 
+  const fetchResumes = useCallback(async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      // 获取用户的简历
+      const resumesResponse = await axios.get("/api/resumes", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const resumesList = resumesResponse.data.data || [];
+      setResumes(resumesList);
+
+      // 默认选择激活的简历
+      const activeResume = resumesList.find((resume) => resume.isActive);
+      if (activeResume) {
+        setSelectedResumeId(activeResume._id);
+        setSelectedResume(activeResume);
+      }
+
+      setLoading(false);
+    } catch (err) {
+      console.error("获取数据失败:", err);
+      setError("无法加载数据，请重试");
+      setLoading(false);
+    }
+  }, [navigate]);
 
   // 获取用户保存的职位列表和简历
   useEffect(() => {
@@ -89,38 +120,6 @@ const AnalysisStartPage = () => {
 
     fetchResumes();
   }, [navigate, fetchResumes]);
-
-  const fetchResumes = useCallback(async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
-      // 获取用户的简历
-      const resumesResponse = await axios.get("/api/resumes", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const resumesList = resumesResponse.data.data || [];
-      setResumes(resumesList);
-
-      // 默认选择激活的简历
-      const activeResume = resumesList.find((resume) => resume.isActive);
-      if (activeResume) {
-        setSelectedResumeId(activeResume._id);
-        setSelectedResume(activeResume);
-      }
-
-      setLoading(false);
-    } catch (err) {
-      console.error("获取数据失败:", err);
-      setError("无法加载数据，请重试");
-      setLoading(false);
-    }
-  }, [navigate]);
 
   // 从JobSubmit复制的模拟分析进度功能
   const simulateAnalysisProgress = () => {
